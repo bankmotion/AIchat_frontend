@@ -105,6 +105,7 @@ export const Home: React.FC = () => {
   const { data: chatData, isLoading: isChatLoading } = useQuery(
     ["chats", profile?.id],
     async () => {
+      if(profile?.id){
       const responses = await supabase
         .from("chats")
         .select(
@@ -115,9 +116,13 @@ export const Home: React.FC = () => {
         .eq("user_id", profile?.id)
         .limit(4)
         .returns<ChatEntityWithCharacter[]>();
+        
+
+        console.log(responses,"responses")
 
       const chats = responses.data;
       return chats;
+      }
     },
     { enabled: !!profile }
   );
