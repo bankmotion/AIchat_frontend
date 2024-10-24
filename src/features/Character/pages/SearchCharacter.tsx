@@ -34,18 +34,22 @@ const TagContainer = styled.div`
 export const SearchCharacter: React.FC = () => {
   const { tagId: seoFriendlyId } = useParams();
   const tagId = getRealId(seoFriendlyId);
+  const { tagName: seoFriendlyName } = useParams();
+  const tagName = getRealId(seoFriendlyName);
 
   const tags = useTags();
-  const { localData } = useContext(AppContext);
+  const { profile, localData, updateLocalData } = useContext(AppContext);
 
   const [searchParams, setSearchParams] = useState<SearchParams>({
     search: "",
     mode: localData.character_view || "sfw",
     sort: "latest",
     tag_id: tagId ? parseInt(tagId, 10) : undefined,
+    tag_name:tagName ? tagName : undefined, 
   });
 
   const updateSearchParams = (params: SearchParams) => {
+    console.log("sdfsdfsdfdsfdsf")
     setSearchParams({ ...searchParams, ...params });
   };
 
@@ -56,7 +60,7 @@ export const SearchCharacter: React.FC = () => {
   if (tags && tagId) {
     const tag = tags.find((tag) => tag.id === parseInt(tagId, 10));
     title = `Characters with tag ${tag?.name}`;
-    canonial = `${location.origin}${tagUrl(parseInt(tagId, 10), tag?.name || "")}`;
+    canonial = `${location.origin}${tagUrl(tagId, tag?.name || "")}`;
   }
 
   return (
@@ -155,12 +159,12 @@ export const SearchCharacter: React.FC = () => {
               <Tooltip key={tag.id} title={tag.description}>
                 <Tag.CheckableTag
                   key={tag.id}
-                  checked={tag.id === searchParams.tag_id}
+                  checked={tag.join_name === searchParams.tag_name}
                   onChange={() => {
-                    if (tag.id === searchParams.tag_id) {
-                      updateSearchParams({ tag_id: undefined });
+                    if (tag.join_name === searchParams.tag_name) {
+                      updateSearchParams({ tag_name: undefined });
                     } else {
-                      updateSearchParams({ tag_id: tag.id });
+                      updateSearchParams({ tag_name: tag.join_name });
                     }
                   }}
                 >

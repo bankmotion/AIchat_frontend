@@ -60,6 +60,7 @@ export class Source {
 
   static async fromFile(file: File) {
     const { json, image } = await Loader.parse(file);
+    console.log(json, image, "image", "json", file, "file")
 
     return new Source(file, json, image);
   }

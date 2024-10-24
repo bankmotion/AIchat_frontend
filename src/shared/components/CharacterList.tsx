@@ -72,7 +72,20 @@ export const CharacterList: React.FC<CharacterListProps> = ({
   size = "medium",
   onCharacterDeleted,
 }) => {
-  const { profile } = useContext(AppContext);
+  const { localData, profile } = useContext(AppContext);
+  console.log(localData.character_view, "localData")
+
+  // Filter characters based on localData.character_view
+  // const filteredCharacters = characters.filter((character) => {
+  //   if (localData.character_view === "all") {
+  //     return true; // Show all characters
+  //   } else if (localData.character_view === "sfw") {
+  //     return character.is_nsfw === false; // Show only SFW characters
+  //   } else if (localData.character_view === "nsfw") {
+  //     return character.is_nsfw === true; // Show only NSFW characters
+  //   }
+  //   return true; // Fallback in case of unexpected value
+  // });
 
   if (characters.length === 0) {
     return <p>No characters</p>;
@@ -94,7 +107,7 @@ export const CharacterList: React.FC<CharacterListProps> = ({
         isBlocked(profile.block_list, "creators", character.creator_id) ||
         isTagBlocked(
           profile.block_list,
-          (character.tags || []).map((tag) => tag.id)
+          (character.character_tags || []).map((tag) => tag.tags.id)
         )
       );
     },

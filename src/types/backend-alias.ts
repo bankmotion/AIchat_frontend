@@ -38,7 +38,7 @@ export type CharacterWithProfileAndTag = SupaCharacter & { user_profiles: SupaUs
 };
 
 export interface Paginated<T> {
-  data: Array<T>;
+  characterData: Array<T>;
   total: number;
   size: number;
   page: number;

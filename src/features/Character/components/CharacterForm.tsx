@@ -30,6 +30,7 @@ import { AppContext } from "../../../appContext";
 import { Tokenizer } from "../services/character-parse/tokenizer";
 import { characterUrl } from "../../../shared/services/url-utils";
 import { CharacterCard } from "../../../shared/components/CharacterCard";
+import { SUPABASE_BUCKET_URL } from "../../../config";
 
 const { Title } = Typography;
 
@@ -85,8 +86,10 @@ export const CharacterForm: React.FC<CharacterFormProps> = ({ id, values }) => {
   const onFinish = async (formValues: FormValues) => {
     try {
       setIsSubmitting(true);
+      console.log("sdfdsfdfd")
 
       const avatarImg = formValues.avatar_payload?.file;
+      console.log(avatarImg, "avatarImg")
       if (mode === "create" && !avatarImg) {
         // Require image
         message.error("Please set an avatar for your character");
@@ -95,22 +98,33 @@ export const CharacterForm: React.FC<CharacterFormProps> = ({ id, values }) => {
 
       let avatar = botAvatar;
       if (!avatar && avatarImg) {
+        console.log(avatarImg, "avatarImgaaaa")
         const compressedImage = await compressImage(avatarImg);
+        console.log(compressedImage, "compressedImage")
         const extension = compressedImage.name.substring(avatarImg.name.lastIndexOf(".") + 1);
-
+        console.log(extension, "extension")
+        const filePath = `images/bot-avatars/${crypto.randomUUID()}.${extension}`;
         const uploadedAvatar = await supabase.storage
-          .from("bot-avatars")
-          .upload(`${crypto.randomUUID()}.${extension}`, compressedImage, {
+          .from("cdn.venusai.chat")
+          .upload(filePath, compressedImage, {
             cacheControl: "1209600", // 2 weeks
             upsert: true,
           });
+          if (uploadedAvatar.error) {
+            console.error("Error uploading avatar:", uploadedAvatar.error);
+          } else {
+            console.log("Avatar uploaded successfully:", uploadedAvatar.data);
+          }
         if (uploadedAvatar?.data?.path) {
           avatar = uploadedAvatar.data.path;
+          console.log(avatar,"avatar")
           setBotAvatar(avatar);
         }
       }
 
       const { avatar_payload, ...postData } = formValues;
+
+      console.log(formValues, "formValues")
 
       if (mode === "create") {
         const result = await axiosInstance.post<SupaCharacter>("/characters", {
@@ -204,9 +218,12 @@ export const CharacterForm: React.FC<CharacterFormProps> = ({ id, values }) => {
             showUploadList={false}
             beforeUpload={async (file) => {
               form.setFieldValue("avatar_payload", file);
+              form.setFieldValue("avatar", file.name);
+              console.log(file, "file")
 
               try {
                 const { character } = await parseCharacter(file);
+                console.log(character, "character")
 
                 if (character && character.name) {
                   form.setFieldsValue({
@@ -216,6 +233,7 @@ export const CharacterForm: React.FC<CharacterFormProps> = ({ id, values }) => {
                     first_message: character.first_message,
                     example_dialogs: character.example_dialogs,
                     scenario: character.scenario,
+                    avatar: character.name
                   });
 
                   checkCharacterExist(character.name, character.personality);

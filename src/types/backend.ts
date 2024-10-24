@@ -3,6 +3,8 @@
  * Do not make direct changes to the file.
  */
 
+import { Character } from "../features/Character/services/character-parse/character";
+
 
 export interface paths {
   "/env": {
@@ -128,12 +130,16 @@ export interface components {
       scenario: string;
       updated_at: string;
     };
+    CharacterTag :{
+      tags: components["schemas"]["TagEntity"]
+    };
     TagEntity: {
       id: number;
       description: string;
       name: string;
       slug: string;
       created_at: string;
+      join_name:string;
     };
     CharacterStats: {
       chat: number;
@@ -149,8 +155,9 @@ export interface components {
       is_nsfw: boolean;
       creator_id: string;
       creator_name: string;
-      creator_verified: boolean;
-      tags?: (components["schemas"]["TagEntity"])[];
+      creator_verified?: boolean;
+      character_tags?:(components["schemas"]["CharacterTag"])[];
+      // tags?: (components["schemas"]["TagEntity"])[];
       stats?: components["schemas"]["CharacterStats"];
     };
     FullCharacterView: {
@@ -366,6 +373,7 @@ export interface operations {
       query: {
         user_id?: string;
         tag_id?: number;
+        tag_name?:string;
         page: number;
         mode?: "sfw" | "all" | "nsfw";
         sort?: "latest" | "popular";

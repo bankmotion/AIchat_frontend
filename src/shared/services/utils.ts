@@ -11,7 +11,7 @@ export const getAvatarUrl = (avatar?: string) =>
     : `${SUPABASE_BUCKET_URL}/bot-avatars/anon.jpg`;
 
 export const getBotAvatarUrl = (avatar?: string) =>
-  avatar ? `${SUPABASE_BUCKET_URL}/bot-avatars/${avatar}` : "";
+  avatar ? `${SUPABASE_BUCKET_URL}${avatar}` : "";
 
 export const getTimeAgo = (dateStr: string) => {
   const dateObj = parseISO(dateStr);

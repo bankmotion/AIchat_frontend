@@ -92,13 +92,13 @@ export const Home: React.FC = () => {
         return { sort: "popular", ...modeParams };
       // Lol hard code for now
       case "female":
-        return { tag_id: 2, ...modeParams };
+        return { tag_name: "Female", ...modeParams };
       case "male":
-        return { tag_id: 1, ...modeParams };
+        return { tag_name: "Male", ...modeParams };
       case "anime":
-        return { tag_id: 9, ...modeParams };
+        return { tag_name: "Anime", ...modeParams };
       case "game":
-        return { tag_id: 8, ...modeParams };
+        return { tag_name: "Game", ...modeParams };
     }
   }, [segment, localData]);
 

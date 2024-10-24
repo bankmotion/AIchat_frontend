@@ -1,3 +1,4 @@
+import{useContext}  from "react"
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import styled from "styled-components";
 import { Card, Popconfirm, Tooltip, Space, Tag } from "antd";
@@ -9,6 +10,7 @@ import { getBotAvatarUrl } from "../services/utils";
 import { PrivateIndicator } from "./PrivateIndicator";
 import { TagLink } from "./TagLink";
 import { VerifiedMark } from "./shared";
+import { AppContext } from "../../appContext";
 
 export interface CharacterCardProps {
   character: CharacterView | CharacterLite;
@@ -44,6 +46,7 @@ export const CharacterCard: React.FC<CharacterCardProps> = ({
   onDelete,
 }) => {
   console.log({ hidden, character });
+  const {localData } = useContext(AppContext);
 
   return (
     <Card
@@ -115,7 +118,7 @@ export const CharacterCard: React.FC<CharacterCardProps> = ({
       />
       <Space className="mt-4 " size={[0, 4]} wrap>
         {character.is_nsfw ? <Tag color="error">🔞 NSFW</Tag> : ""}
-        {"tags" in character && character.tags?.slice(0, 4).map((tag) => <TagLink tag={tag} />)}
+        {"character_tags" in character && character.character_tags?.slice(0, 4).map((tag) => <TagLink tag={tag.tags} />)}
       </Space>
     </Card>
   );

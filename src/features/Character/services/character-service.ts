@@ -17,6 +17,7 @@ export type SearchCharactersParams = SearchCharParams;
 // Import/Export logic is referenced to https://github.com/ZoltanAI/character-editor
 export const parseCharacter = async (file: File) => {
   const character = await Source.fromFile(file);
+  console.log(character,"character parase")
   return character;
 };
 

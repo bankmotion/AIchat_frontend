@@ -9,6 +9,6 @@ export const characterUrl = (id: string, name: string) => {
   return `/characters/${id}_character-${toSlug(name)}`;
 };
 
-export const tagUrl = (id: number, slug: string) => {
-  return `/tags/${id}_characters-with-tag-${slug}`;
+export const tagUrl = (join_name: string, slug: string) => {
+  return `/tags/${join_name}`;
 };

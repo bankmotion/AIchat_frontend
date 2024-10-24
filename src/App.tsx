@@ -130,7 +130,7 @@ const router = createBrowserRouter([
         element: <SearchCharacter />,
       },
       {
-        path: "/tags/:tagId",
+        path: "/tags/:tagName",
         element: <SearchCharacter />,
       },
       {
