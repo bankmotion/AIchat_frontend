@@ -10,5 +10,5 @@ export const characterUrl = (id: string, name: string) => {
 };
 
 export const tagUrl = (join_name: string, slug: string) => {
-  return `/tags/${join_name}`;
+  return `/${slug}`;
 };

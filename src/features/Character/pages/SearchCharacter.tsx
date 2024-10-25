@@ -16,6 +16,7 @@ import { SITE_NAME } from "../../../config";
 import { useParams } from "react-router-dom";
 import { getRealId } from "../../../shared/services/utils";
 import { tagUrl } from "../../../shared/services/url-utils";
+import { TagLink } from "../../../shared/components/TagLink";
 
 const { Title } = Typography;
 
@@ -153,24 +154,32 @@ export const SearchCharacter: React.FC = () => {
       </Row> */}
 
       {tags && (
+        // <TagContainer>
+        //   <Space className="mt-4 " size={[2, 8]} wrap>
+        //     {tags?.map((tag) => (
+        //       <Tooltip key={tag.id} title={tag.description}>
+        //         <Tag.CheckableTag
+        //           key={tag.id}
+        //           checked={tag.join_name === searchParams.tag_name}
+        //           onChange={() => {
+        //             if (tag.join_name === searchParams.tag_name) {
+        //               updateSearchParams({ tag_name: undefined });
+        //             } else {
+        //               updateSearchParams({ tag_name: tag.join_name });
+        //             }
+        //           }}
+        //         >
+        //           {/* {tag.name} */}
+        //           <TagLink tag={tag} marginInlineEnd={0}/>
+        //         </Tag.CheckableTag>
+        //       </Tooltip>
+        //     ))}
+        //   </Space>
+        // </TagContainer>
         <TagContainer>
           <Space className="mt-4 " size={[2, 8]} wrap>
             {tags?.map((tag) => (
-              <Tooltip key={tag.id} title={tag.description}>
-                <Tag.CheckableTag
-                  key={tag.id}
-                  checked={tag.join_name === searchParams.tag_name}
-                  onChange={() => {
-                    if (tag.join_name === searchParams.tag_name) {
-                      updateSearchParams({ tag_name: undefined });
-                    } else {
-                      updateSearchParams({ tag_name: tag.join_name });
-                    }
-                  }}
-                >
-                  {tag.name}
-                </Tag.CheckableTag>
-              </Tooltip>
+              <TagLink tag={tag} />
             ))}
           </Space>
         </TagContainer>
