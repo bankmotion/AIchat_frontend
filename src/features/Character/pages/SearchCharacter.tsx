@@ -46,11 +46,11 @@ export const SearchCharacter: React.FC = () => {
     mode: localData.character_view || "sfw",
     sort: "latest",
     tag_id: tagId ? parseInt(tagId, 10) : undefined,
-    tag_name:tagName ? tagName : undefined, 
+    tag_name: tagName ? tagName : undefined,
   });
 
   const updateSearchParams = (params: SearchParams) => {
-    console.log("sdfsdfsdfdsfdsf")
+    updateLocalData({ character_view: params.mode })
     setSearchParams({ ...searchParams, ...params });
   };
 
@@ -179,7 +179,11 @@ export const SearchCharacter: React.FC = () => {
         <TagContainer>
           <Space className="mt-4 " size={[2, 8]} wrap>
             {tags?.map((tag) => (
-              <TagLink tag={tag} />
+              <TagLink
+                key={tag.id}
+                tag={tag}
+                isSelected={tag.join_name.toLowerCase() === searchParams.tag_name}
+              />
             ))}
           </Space>
         </TagContainer>
