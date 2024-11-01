@@ -14,6 +14,7 @@ import { Provider } from "@supabase/supabase-js";
 import { AppContext } from "../../../appContext";
 import { SITE_NAME, supabase } from "../../../config";
 import { Helmet } from "react-helmet";
+import { Profile } from "../../../types/profile";
 
 const { Title } = Typography;
 
@@ -30,7 +31,7 @@ const RegisterFormContainer = styled.div`
 `;
 
 export const Register = () => {
-  const { setSession } = useContext(AppContext);
+  const { setSession, setProfile } = useContext(AppContext);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { message } = App.useApp();
   const navigate = useNavigate();
@@ -46,17 +47,80 @@ export const Register = () => {
       });
 
       if (result.error) {
-        message.error(JSON.stringify(result.error, null, 2));
+        message.error(result.error.code);
       } else {
         const { user } = result.data; // Session is null, but can request lol
         if (user) {
+          console.log(user, "user")
+          const profileData = {
+            id: user.id, // Assuming the profile table has an 'id' field matching the user ID
+            block_list: { bots: [], creators: [], tags: [] }, // Default empty block list
+            is_verified: false,
+            config: {}, // Default configuration
+            // Add any other profile fields needed
+          };
+
+          // Insert profile data into the profile table
+          const { data, error } = await supabase
+            .from('user_profiles')
+            .insert([profileData]);
+
+          // Check for errors during profile creation
+          if (error) {
+            console.error('Error creating profile:', error);
+            return;
+          }
+
+          const profile = await supabase
+            .from("user_profiles")
+            .select('*')
+            .eq("id", user.id)
+          console.log(profile, "profile")
           const sessionData = await supabase.auth.getSession();
           if (sessionData.data.session) {
             setSession(sessionData.data.session);
+            console.log(sessionData.data.session, "sessionData.data.session")
+            if (profile.data && profile.data.length > 0) {
+              const fetchedProfile = profile.data[0];
+              // Type guard to check if block_list is in the expected format
+              const isValidBlockList = (blockList: any): blockList is Profile["block_list"] => {
+                return (
+                  blockList &&
+                  Array.isArray(blockList.bots) &&
+                  blockList.bots.every((bot: any) => typeof bot === "string") &&
+                  Array.isArray(blockList.creators) &&
+                  blockList.creators.every((creator: any) => typeof creator === "string") &&
+                  Array.isArray(blockList.tags) &&
+                  blockList.tags.every((tag: any) => typeof tag === "number")
+                );
+              };
+
+              // Validate and assign block_list
+              const blockList = isValidBlockList(fetchedProfile.block_list)
+                ? fetchedProfile.block_list
+                : { bots: [], creators: [], tags: [] };
+              // Create a new profile object ensuring types align
+              const validatedProfile: Profile = {
+                about_me: fetchedProfile.about_me,
+                avatar: fetchedProfile.avatar,
+                block_list: blockList,
+                id: fetchedProfile.id,
+                is_verified: fetchedProfile.is_verified,
+                name: fetchedProfile.name,
+                profile: fetchedProfile.profile,
+                user_name: fetchedProfile.user_name,
+                config: fetchedProfile.config
+              };
+              setProfile(validatedProfile);
+            }
+            else {
+              console.error("Profile data is null or empty");
+            }
           }
 
           message.success("Account created successfully. Please set your username.");
-          navigate("/profile");
+          // navigate("/profile");
+          navigate("/");
         }
       }
     } finally {
@@ -64,14 +128,108 @@ export const Register = () => {
     }
   };
 
-  const registerWithProvider = (provider: Provider) => {
-    return supabase.auth.signInWithOAuth({
+  // const registerWithProvider = (provider: Provider) => {
+  //   return supabase.auth.signInWithOAuth({
+  //     provider,
+  //     options: {
+  //       redirectTo: `${location.origin}/profile`,
+  //     },
+  //   });
+  // };
+
+  const registerWithProvider = async (provider: Provider) => {
+    // Initiate OAuth sign-in
+    const { error: signInError } = await supabase.auth.signInWithOAuth({
       provider,
-      options: {
-        redirectTo: `${location.origin}/profile`,
-      },
     });
-  };
+    console.log("sdfdsfffsdfd")
+    if (signInError) {
+      console.error("Error during sign-in:", signInError);
+      return;
+    }
+
+    // Retrieve the session data
+    const sessionData = await supabase.auth.getSession();
+    if (sessionData.data.session) {
+      const session = sessionData.data.session;
+      setSession(session);
+      console.log(session, "sessionData.data.session");
+      // Insert profile data into the profile table
+      const profileData = {
+        // Specify your profile data fields here
+        id: session.user.id,
+        block_list: { bots: [], creators: [], tags: [] }, // Default empty block list
+        is_verified: false,
+        config: {}, // Default configuration
+      };
+
+      const { data, error: profileInsertError } = await supabase
+        .from("user_profiles")
+        .insert([profileData]);
+
+      // Check for errors during profile creation
+      if (profileInsertError) {
+        console.error("Error creating profile:", profileInsertError);
+        return;
+      }
+
+      // Retrieve the newly created profile
+      const { data: profileDataFetched, error: profileFetchError } = await supabase
+        .from("user_profiles")
+        .select("*")
+        .eq("id", session.user.id);
+
+      if (profileFetchError) {
+        console.error("Error fetching profile:", profileFetchError);
+        return;
+      }
+
+      if (profileDataFetched && profileDataFetched.length > 0) {
+        const fetchedProfile = profileDataFetched[0];
+
+        // Type guard to check if block_list is in the expected format
+        const isValidBlockList = (blockList: any): blockList is Profile["block_list"] => {
+          return (
+            blockList &&
+            Array.isArray(blockList.bots) &&
+            blockList.bots.every((bot: any) => typeof bot === "string") &&
+            Array.isArray(blockList.creators) &&
+            blockList.creators.every((creator: any) => typeof creator === "string") &&
+            Array.isArray(blockList.tags) &&
+            blockList.tags.every((tag: any) => typeof tag === "number")
+          );
+        };
+
+        // Validate and assign block_list
+        const blockList = isValidBlockList(fetchedProfile.block_list)
+          ? fetchedProfile.block_list
+          : { bots: [], creators: [], tags: [] };
+
+        // Create a new profile object ensuring types align
+        const validatedProfile: Profile = {
+          about_me: fetchedProfile.about_me,
+          avatar: fetchedProfile.avatar,
+          block_list: blockList,
+          id: fetchedProfile.id,
+          is_verified: fetchedProfile.is_verified,
+          name: fetchedProfile.name,
+          profile: fetchedProfile.profile,
+          user_name: fetchedProfile.user_name,
+          config: fetchedProfile.config,
+        };
+
+        // Update the profile state
+        setProfile(validatedProfile);
+
+        // Show success message and navigate
+        message.success("Account created successfully. Please set your username.");
+        navigate("/profile");
+      }
+      else {
+        console.error("Profile data is null or empty");
+      }
+    }
+  }
 
   return (
     <RegisterFormContainer>

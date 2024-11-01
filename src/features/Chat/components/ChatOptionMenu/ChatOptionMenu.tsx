@@ -105,15 +105,17 @@ export const ChatOptionMenu: React.FC<ChatOptionMenuProps> = ({ chat, onReload, 
   };
 
   // Do not display when user not logged in
-  if (!profile || !config) {
-    return null;
-  }
+  // if (!profile || !config) {
+  //   console.log(config,"config")
+  //   return null;
+  // }
 
   return (
     <>
       <span style={{ marginLeft: "auto" }}>
         {readyToChat ? (
-          <Tag color="green">API is ready. Using {config.api}.</Tag>
+          // <Tag color="green">API is ready. Using {config.api}.</Tag>
+          <Tag color="green">green</Tag>
         ) : (
           <Tag
             style={{ cursor: "pointer" }}
@@ -240,8 +242,8 @@ export const ChatOptionMenu: React.FC<ChatOptionMenuProps> = ({ chat, onReload, 
                   <div style={{ whiteSpace: "pre" }} onClick={(e) => e.stopPropagation()}>
                     <Switch
                       className="mr-2"
-                      defaultChecked={config.immersive_mode}
-                      onChange={(checked) => updateConfig({ ...config, immersive_mode: checked })}
+                      // defaultChecked={config.immersive_mode}
+                      // onChange={(checked) => updateConfig({ ...config, immersive_mode: checked })}
                     />
                     Immersive mode
                   </div>
@@ -255,8 +257,8 @@ export const ChatOptionMenu: React.FC<ChatOptionMenuProps> = ({ chat, onReload, 
                   <div onClick={(e) => e.stopPropagation()}>
                     <Switch
                       className="mr-2"
-                      defaultChecked={config.text_streaming}
-                      onChange={(checked) => updateConfig({ ...config, text_streaming: checked })}
+                      // defaultChecked={config.text_streaming}
+                      // onChange={(checked) => updateConfig({ ...config, text_streaming: checked })}
                     />
                     Text streaming
                   </div>

@@ -45,8 +45,9 @@ export const PublicProfile: React.FC = () => {
     ["profile", profileId],
     async () => {
       const profileResponse = await axiosInstance.get<ProfileResponse>(`/profiles/${profileId}`);
-
+      console.log(profileResponse,"profileResponse")
       const profile = profileResponse.data;
+      console.log(profile,"profile")
       return profile;
     },
     {
@@ -63,9 +64,17 @@ export const PublicProfile: React.FC = () => {
     async (id: string) => {
       const currentBlockList = profile?.block_list || DEFAULT_BLOCK_LIST;
       currentBlockList.creators.push(id);
-      await updateBlockList(currentBlockList, queryClient);
 
-      message.success("This creator has been blocked!");
+      if (profile?.id) {
+        console.log(profile.id,"profile.id")
+        await updateBlockList(currentBlockList, profile.id, queryClient);
+
+        message.success("Profile has been blocked!");
+      }
+
+      else {
+        message.error("An error occurred!");
+      }
     },
     [profile]
   );
@@ -74,9 +83,16 @@ export const PublicProfile: React.FC = () => {
     async (id: string) => {
       const currentBlockList = profile?.block_list || DEFAULT_BLOCK_LIST;
       currentBlockList.creators = currentBlockList.creators.filter((creatorId) => creatorId !== id);
-      await updateBlockList(currentBlockList, queryClient);
+      if (profile?.id) {
+        console.log(profile.id,"profile.id")
+        await updateBlockList(currentBlockList, profile.id, queryClient);
 
-      message.success("This creator has been unblocked!");
+        message.success("Profile has been blocked!");
+      }
+
+      else {
+        message.error("An error occurred!");
+      }
     },
     [profile]
   );

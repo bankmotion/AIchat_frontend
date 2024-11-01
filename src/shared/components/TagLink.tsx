@@ -10,7 +10,7 @@ interface TagLinkProps {
 
 export const TagLink: React.FC<TagLinkProps> = ({ tag, isSelected = false }) => (
   <Link to={tagUrl(tag?.join_name, tag?.slug)} target="_blank">
-    <Tooltip key={tag?.id} title={`${tag?.join_name} - Click to view more`}>
+    <Tooltip key={tag?.id} title={`${tag?.join_name}${tag?.slug} - Click to view more`}>
       <Tag
         style={{
           backgroundColor: isSelected ? "#1668dc" : undefined,

@@ -1,3 +1,4 @@
+import {exiftool} from "exiftool-vendored";
 import { Character, CharacterJsonObject } from "./character";
 import { JsonUnknownFormatError } from "./error";
 import { Loader } from "./loader";

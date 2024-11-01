@@ -23,12 +23,16 @@ export const ChatHistoryModal: React.FC<ChatHistoryModalProps> = ({
   const { data, refetch, isLoading } = useQuery(
     ["chats", profile?.id],
     async () => {
+      if (!character.id || !profile) {
+        throw new Error("Character ID or profile is undefined");
+      }
+
       const responses = await supabase
         .from("chats")
         .select("*, characters(name, description, avatar)")
         .order("created_at", { ascending: false })
         .eq("user_id", profile?.id)
-        .eq("character_id", character.id)
+        .eq("character_id", character?.id)
         .returns<ChatEntityWithCharacter[]>();
 
       const chats = responses.data;

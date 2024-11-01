@@ -15,6 +15,7 @@ import { AppContext } from "../../../appContext";
 import { SITE_NAME, supabase } from "../../../config";
 import { Provider } from "@supabase/supabase-js";
 import { Helmet } from "react-helmet";
+import { Profile } from "../../../types/profile";
 
 const { Title } = Typography;
 
@@ -39,7 +40,7 @@ export const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const navigate = useNavigate();
-  const { setSession } = useContext(AppContext);
+  const { setSession, setProfile } = useContext(AppContext);
 
   const onFinish = async ({ email, password }: FormValues) => {
     setIsSubmitting(true);
@@ -48,11 +49,54 @@ export const Login = () => {
       const result = await supabase.auth.signInWithPassword({ email, password });
 
       if (result.error) {
-        message.error(JSON.stringify(result.error, null, 2));
+        // message.error(JSON.stringify(result.error, null, 2));
+        message.error("Invalid login credentials.")
       } else {
         const { session } = result.data;
         if (session) {
           setSession(session);
+          console.log(session.user.id);
+          const profile = await supabase
+            .from("user_profiles")
+            .select('*')
+            .eq("id", session.user.id)
+          if (profile.data && profile.data.length > 0) {
+            const fetchedProfile = profile.data[0];
+            // Type guard to check if block_list is in the expected format
+            const isValidBlockList = (blockList: any): blockList is Profile["block_list"] => {
+              return (
+                blockList &&
+                Array.isArray(blockList.bots) &&
+                blockList.bots.every((bot: any) => typeof bot === "string") &&
+                Array.isArray(blockList.creators) &&
+                blockList.creators.every((creator: any) => typeof creator === "string") &&
+                Array.isArray(blockList.tags) &&
+                blockList.tags.every((tag: any) => typeof tag === "number")
+              );
+            };
+
+            // Validate and assign block_list
+            const blockList = isValidBlockList(fetchedProfile.block_list)
+              ? fetchedProfile.block_list
+              : { bots: [], creators: [], tags: [] };
+            // Create a new profile object ensuring types align
+            const validatedProfile: Profile = {
+              about_me: fetchedProfile.about_me,
+              avatar: fetchedProfile.avatar,
+              block_list: blockList,
+              id: fetchedProfile.id,
+              is_verified: fetchedProfile.is_verified,
+              name: fetchedProfile.name,
+              profile: fetchedProfile.profile,
+              user_name: fetchedProfile.user_name,
+              config: fetchedProfile.config
+            };
+            setProfile(validatedProfile);
+          }
+          else {
+            console.error("Profile data is null or empty");
+          }
+          message.success("Logged in successfully.");
           navigate("/");
         }
       }

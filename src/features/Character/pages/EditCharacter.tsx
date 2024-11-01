@@ -18,9 +18,12 @@ export const EditCharacter: React.FC = () => {
   const { data, isLoading } = useQuery(
     ["character", characterId],
     async () => {
+      if (!characterId) {
+        throw new Error("Character ID is undefined");
+      }
       const result = await supabase
         .from("characters")
-        .select("*, tags(id)")
+        .select(`*, character_tags(tags (id, name, join_name))`)
         .eq("id", characterId)
         .limit(1)
         .single();
@@ -32,8 +35,12 @@ export const EditCharacter: React.FC = () => {
 
   const editData = useMemo(() => {
     if (data?.data) {
-      const tags = Array.isArray(data.data.tags) ? data.data.tags : [];
-      const copy = { ...data.data, tag_ids: tags.map((tag) => tag.id) };
+      console.log(data?.data, "data.data")
+      const tags = Array.isArray(data?.data?.character_tags) ? data.data.character_tags : [];
+      console.log(tags, 'tags')
+      // const copy = { ...data.data, tag_ids: tags.map((tag) => tag?.tags?.id) };
+      const copy = { ...data.data, tag_ids: tags.map((tag) => tag?.tags?.id) };
+      console.log(copy, "copy")
       return copy;
     }
 

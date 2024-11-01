@@ -25,6 +25,23 @@ export class Loader {
     }
   }
 
+  // Parse JSON and wrap any error
+  static #json1(text: string) {
+    try {
+      return (JSON.parse(text)).data as CharacterJsonObject;
+    } catch (ex) {
+      throw new JsonParseError("Unable to parse", text, {
+        cause: ex,
+      });
+    }
+  }
+
+  static parseData(text: string): any {
+    const useJson1 = text.includes('{"data":');
+    // Choose the appropriate method based on `useJson1`
+    return useJson1 ? this.#json1(text) : this.#json(text);
+  }
+
   static async parse(file: File) {
     let json = null;
     let image = null;
@@ -33,9 +50,10 @@ export class Loader {
       json = this.#json(await file.text());
     } else if (file.type === "image/png") {
       const text = Png.Parse(await file.arrayBuffer());
+        console.log(text,"text")
 
       try {
-        json = this.#json(text);
+        json = this.parseData(text);
       } catch (ex) {
         if (!(ex instanceof JsonParseError)) throw ex;
 
@@ -49,7 +67,7 @@ export class Loader {
 
       image = await this.image(URL.createObjectURL(file));
     }
-
+    console.log(json,"json")
     return {
       json,
       image,

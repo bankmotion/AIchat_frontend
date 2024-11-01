@@ -135,7 +135,7 @@ export const ChatList: React.FC<ChatListProps> = ({
                   </p>
                 )}
                 <p>
-                  <ClockCircleOutlined /> {getTimeAgo(chat.updated_at)} ago
+                  { chat.updated_at && <><ClockCircleOutlined /> {getTimeAgo(chat.updated_at)} ago </>}
                 </p>
               </div>
             }

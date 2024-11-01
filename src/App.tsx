@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ConfigProvider, App as AntdApp, theme, Spin, message } from "antd";
 import loadable from "@loadable/component";
-import { isEqual } from "lodash-es";
+import { isEqual, isNull } from "lodash-es";
 import { Session } from "@supabase/supabase-js";
 
 import { AppContext } from "./appContext";
@@ -217,7 +217,76 @@ const App: React.FC = () => {
       const response = await supabase.auth.getSession();
 
       if (response.data.session) {
+        console.log(response.data.session, "response.data.session")
         setSession(response.data.session);
+
+        // Insert profile data into the profile table
+        const profileData = {
+          // Specify your profile data fields here
+          id: response.data.session.user.id,
+          block_list: { bots: [], creators: [], tags: [] }, // Default empty block list
+          is_verified: false,
+          config: {}, // Default configuration
+        };
+        console.log("1")
+        const { data, error: profileInsertError } = await supabase
+          .from("user_profiles")
+          .insert([profileData]);
+        console.log("2")
+        // Retrieve the newly created profile
+        const { data: profileDataFetched, error: profileFetchError } = await supabase
+          .from("user_profiles")
+          .select("*")
+          .eq("id", response.data.session.user.id);
+
+        if (profileFetchError) {
+          console.error("Error fetching profile:", profileFetchError);
+          return;
+        }
+        console.log("3")
+        if (profileDataFetched && profileDataFetched.length > 0) {
+          const fetchedProfile = profileDataFetched[0];
+          console.log("4")
+          // Type guard to check if block_list is in the expected format
+          const isValidBlockList = (blockList: any): blockList is Profile["block_list"] => {
+            return (
+              blockList &&
+              Array.isArray(blockList.bots) &&
+              blockList.bots.every((bot: any) => typeof bot === "string") &&
+              Array.isArray(blockList.creators) &&
+              blockList.creators.every((creator: any) => typeof creator === "string") &&
+              Array.isArray(blockList.tags) &&
+              blockList.tags.every((tag: any) => typeof tag === "number")
+            );
+          };
+
+          // Validate and assign block_list
+          const blockList = isValidBlockList(fetchedProfile.block_list)
+            ? fetchedProfile.block_list
+            : { bots: [], creators: [], tags: [] };
+
+          // Create a new profile object ensuring types align
+          const validatedProfile: Profile = {
+            about_me: fetchedProfile.about_me,
+            avatar: fetchedProfile.avatar,
+            block_list: blockList,
+            id: fetchedProfile.id,
+            is_verified: fetchedProfile.is_verified,
+            name: fetchedProfile.name,
+            profile: fetchedProfile.profile,
+            user_name: fetchedProfile.user_name,
+            config: fetchedProfile.config,
+          };
+          console.log("5")
+          // Update the profile state
+          setProfile(validatedProfile);
+          console.log("6")
+          // Show success message and navigate
+          // message.success("Account created successfully. Please set your username.");
+        }
+        else {
+          console.error("Profile data is null or empty");
+        }
       }
     }
 

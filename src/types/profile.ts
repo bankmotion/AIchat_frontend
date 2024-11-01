@@ -10,6 +10,7 @@ export interface Profile {
   user_name: string | null;
   is_verified?: boolean;
   config: Json;
+  // block_list?:Json;
 
   block_list?: BlockList | null;
 }

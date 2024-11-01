@@ -10,6 +10,7 @@ import { postReview } from "../services/character-service";
 export interface ReviewPanelProps {
   reviews?: ReviewView[];
   characterId?: string;
+  creator?:string;
   refetch: () => void;
 }
 
@@ -26,7 +27,7 @@ const defaultValues: FormValues = {
 export const Like = <LikeFilled style={{ color: "#2ecc71" }} />;
 export const Dislike = <DislikeFilled style={{ color: "#e74c3c" }} />;
 
-export const ReviewPanel: React.FC<ReviewPanelProps> = ({ reviews, characterId, refetch }) => {
+export const ReviewPanel: React.FC<ReviewPanelProps> = ({ reviews, characterId, creator, refetch }) => {
   const { message } = App.useApp();
   const { profile } = useContext(AppContext);
   const [form] = Form.useForm<FormValues>();
@@ -35,7 +36,9 @@ export const ReviewPanel: React.FC<ReviewPanelProps> = ({ reviews, characterId, 
   const canWriteReview = Boolean(
     profile &&
       reviews &&
-      (reviews.length === 0 || reviews.every((review) => review.user_id !== profile.id))
+      (reviews.length === 0 || reviews.every((review) => review.user_id !== profile.id)) &&
+      (profile?.id !== creator)
+
   );
 
   const deleteReview = async () => {
@@ -61,7 +64,9 @@ export const ReviewPanel: React.FC<ReviewPanelProps> = ({ reviews, characterId, 
     try {
       setIsSubmitting(true);
 
-      const result = await postReview({ ...values, character_id: characterId });
+      const result = await postReview({ ...values, character_id: characterId, user_id:profile.id });
+      console.log(result,"result")
+      console.log(result.character_id,"characterId:", characterId, result.user_id, "profile.id",profile.id)
       if (result.character_id === characterId && result.user_id === profile.id) {
         message.success("Review posted!");
         refetch();
@@ -110,7 +115,7 @@ export const ReviewPanel: React.FC<ReviewPanelProps> = ({ reviews, characterId, 
       <Divider className="my-0" />
       <List
         itemLayout="horizontal"
-        dataSource={reviews || []}
+        dataSource={reviews?.filter((review) => (review.is_like != null)) || []}
         renderItem={(item) => (
           <List.Item
             actions={

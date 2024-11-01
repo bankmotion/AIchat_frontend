@@ -92,6 +92,7 @@ export const ViewCharacter: React.FC = () => {
     ["view_character_reviews", characterId],
     async () => {
       const reviews = await getCharacterReviews(characterId!);
+      console.log(reviews, "reviews")
       return reviews;
     },
     { enabled: Boolean(characterId && character && character.is_public) }
@@ -102,6 +103,10 @@ export const ViewCharacter: React.FC = () => {
   const { data: chatData } = useQuery(
     ["public_chats", characterId],
     async () => {
+      if (!characterId) {
+        throw new Error("Character ID is undefined");
+      }
+
       const responses = await supabase
         .from("chats")
         .select(
@@ -138,7 +143,7 @@ export const ViewCharacter: React.FC = () => {
       const existingChat = await supabase
         .from("chats")
         .select("id")
-        .match({ user_id: profile.id, character_id: characterId })
+        .match({ character_id: characterId })
         .order("created_at", { ascending: false })
         .maybeSingle();
 
@@ -162,9 +167,17 @@ export const ViewCharacter: React.FC = () => {
     async (id: string) => {
       const currentBlockList = profile?.block_list || DEFAULT_BLOCK_LIST;
       currentBlockList.bots.push(id);
-      await updateBlockList(currentBlockList, queryClient);
 
-      message.success("Character has been blocked!");
+      if (profile?.id) {
+        await updateBlockList(currentBlockList, profile.id, queryClient);
+
+        message.success("Character has been blocked!");
+      }
+
+      else {
+        message.error("An error occurred!");
+      }
+
     },
     [profile]
   );
@@ -173,9 +186,15 @@ export const ViewCharacter: React.FC = () => {
     async (id: string) => {
       const currentBlockList = profile?.block_list || DEFAULT_BLOCK_LIST;
       currentBlockList.bots = currentBlockList.bots.filter((botId) => botId !== id);
-      await updateBlockList(currentBlockList, queryClient);
+      if (profile?.id) {
+        await updateBlockList(currentBlockList, profile.id, queryClient);
 
-      message.success("Character has been unblocked!");
+        message.success("Character has been unblocked!");
+      }
+
+      else {
+        message.error("An error occurred!");
+      }
     },
     [profile]
   );
@@ -246,15 +265,18 @@ export const ViewCharacter: React.FC = () => {
               <MultiLineMarkdown>{character.description}</MultiLineMarkdown>
             </div>
 
-            {character.is_nsfw || character.tags?.length ? (
+            {/* {character.is_nsfw || character.tags?.length ? (
               <Space size={[0, 8]} wrap>
                 {character.is_nsfw ? <Tag color="error">🔞 NSFW</Tag> : ""}
                 {character.tags?.map((tag) => (
                   <TagLink tag={tag} />
                 ))}
               </Space>
-            ) : null}
-
+            ) : null} */}
+            <Space size={[0, 8]} wrap>
+              {character.is_nsfw ? <Tag color="error">🔞 NSFW</Tag> : ""}
+              {"character_tags" in character && character.character_tags?.slice(0, 4).map((tag) => <TagLink tag={tag.tags} />)}
+            </Space>
             <div className="mt-4">
               <Button
                 type="primary"
@@ -304,13 +326,13 @@ export const ViewCharacter: React.FC = () => {
           </Col>
 
           <Col lg={18} xs={24} className="text-left">
-            <Collapse defaultActiveKey={["reviews", "chats"]}>
+            <Collapse defaultActiveKey={["chats"]}>
               <Collapse.Panel
                 header={`Character definition - May contains spoiler (Total ${Tokenizer.tokenCountFormat(
                   character.personality +
-                    character.first_message +
-                    character.scenario +
-                    character.example_dialogs
+                  character.first_message +
+                  character.scenario +
+                  character.example_dialogs
                 )}. Permanent: ${Tokenizer.tokenCountFormat(
                   character.personality + character.scenario
                 )})`}
@@ -351,8 +373,8 @@ export const ViewCharacter: React.FC = () => {
                 header={
                   reviews ? (
                     <span>
-                      {reviews.length} reviews ({reviews.filter((review) => review.is_like).length}{" "}
-                      {Like}, {reviews.filter((review) => !review.is_like).length} {Dislike})
+                      {reviews.filter((review) => (review.is_like != null)).length} reviews ({reviews.filter((review) => review.is_like).length}{" "}
+                      {Like}, {reviews.filter((review) => (review.is_like == false)).length} {Dislike})
                     </span>
                   ) : (
                     <span>0 review</span>
@@ -362,6 +384,7 @@ export const ViewCharacter: React.FC = () => {
                 <ReviewPanel
                   reviews={reviews}
                   characterId={characterId}
+                  creator={character.creator_id}
                   refetch={() => refetchReviews()}
                 />
               </Collapse.Panel>

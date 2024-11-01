@@ -14,16 +14,19 @@ export interface Database {
           character_id: string
           created_at: string | null
           tag_id: number
+          join_name:string | null
         }
         Insert: {
           character_id: string
           created_at?: string | null
           tag_id: number
+          join_name:string | null
         }
         Update: {
           character_id?: string
           created_at?: string | null
           tag_id?: number
+          join_name:string | null
         }
       }
       characters: {
@@ -167,6 +170,7 @@ export interface Database {
           id: number
           name: string
           slug: string
+          join_name:string | null
         }
         Insert: {
           created_at?: string
@@ -174,6 +178,7 @@ export interface Database {
           id?: number
           name: string
           slug: string
+          join_name:string | null
         }
         Update: {
           created_at?: string
@@ -181,6 +186,7 @@ export interface Database {
           id?: number
           name?: string
           slug?: string
+          join_name:string | null
         }
       }
       user_profiles: {

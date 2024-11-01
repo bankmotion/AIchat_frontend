@@ -89,6 +89,7 @@ export interface components {
       character_id: string;
       is_like: boolean;
       content?: string;
+      user_id:string;
     };
     Review: {
       character_id: string;
@@ -140,6 +141,7 @@ export interface components {
       slug: string;
       created_at: string;
       join_name:string;
+      orderId:number
     };
     CharacterStats: {
       chat: number;
@@ -171,7 +173,8 @@ export interface components {
       creator_id: string;
       creator_name: string;
       creator_verified: boolean;
-      tags?: (components["schemas"]["TagEntity"])[];
+      // tags?: (components["schemas"]["TagEntity"])[];
+      character_tags?:(components["schemas"]["CharacterTag"])[];
       stats?: components["schemas"]["CharacterStats"];
       example_dialogs: string;
       first_message: string;
@@ -199,6 +202,7 @@ export interface components {
       tags: (number)[];
     };
     ProfileUpdateDto: {
+      id?:string;
       about_me?: string;
       avatar?: string;
       name?: string;
@@ -220,6 +224,7 @@ export interface components {
       name: string;
       description: string;
       is_nsfw: boolean;
+      avatar:string
     };
     BlockedContentCreator: {
       id: string;

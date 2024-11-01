@@ -25,6 +25,7 @@ import { FormContainer, VerifiedMark } from "../../../shared/components/shared";
 import { AxiosError } from "axios";
 import { useQueryClient } from "react-query";
 import { Link, useNavigate } from "react-router-dom";
+import { v4 as uuidv4 } from 'uuid';
 import { CharacterLite, SupaCharacter } from "../../../types/backend-alias";
 import { AppContext } from "../../../appContext";
 import { Tokenizer } from "../services/character-parse/tokenizer";
@@ -43,7 +44,8 @@ interface FormValues {
   scenario: string;
   example_dialogs: string;
   first_message: string;
-
+  creator_id?: string;
+  creator_name?:string;
   is_nsfw: boolean;
   is_public: boolean;
   tag_ids: number[];
@@ -103,7 +105,7 @@ export const CharacterForm: React.FC<CharacterFormProps> = ({ id, values }) => {
         console.log(compressedImage, "compressedImage")
         const extension = compressedImage.name.substring(avatarImg.name.lastIndexOf(".") + 1);
         console.log(extension, "extension")
-        const filePath = `images/bot-avatars/${crypto.randomUUID()}.${extension}`;
+        const filePath = `images/character-avatars/${ uuidv4()}.${extension}`;
         const uploadedAvatar = await supabase.storage
           .from("cdn.venusai.chat")
           .upload(filePath, compressedImage, {
@@ -130,9 +132,12 @@ export const CharacterForm: React.FC<CharacterFormProps> = ({ id, values }) => {
         const result = await axiosInstance.post<SupaCharacter>("/characters", {
           ...postData,
           avatar: avatar || values.avatar,
+          creator_id: values.creator_id,
+          creator_name:values.creator_name
         });
         message.success("Character created successfully!");
         queryClient.invalidateQueries(["characters", profile?.id]);
+        console.log(result.data)
         const character = result.data;
 
         navigate(characterUrl(character.id, character.name));

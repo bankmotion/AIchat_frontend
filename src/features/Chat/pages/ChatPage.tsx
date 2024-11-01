@@ -479,7 +479,6 @@ export const ChatPage: React.FC = () => {
                   <LeftCircleFilled /> Back
                 </Button>
               </Link>
-
               <ChatOptionMenu
                 readyToChat={readyToChat}
                 chat={data.chat}

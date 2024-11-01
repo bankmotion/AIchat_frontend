@@ -32,6 +32,9 @@ const updateChat = async (
 };
 
 const deleteChat = async (chatId: ChatID) => {
+  if (!chatId) {
+    throw new Error("chatId is undefined");
+  }
   await supabase.from("chats").delete().eq("id", chatId);
 };
 

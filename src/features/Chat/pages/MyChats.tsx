@@ -18,6 +18,9 @@ export const MyChats: React.FC = () => {
   const { data, refetch, isLoading } = useQuery(
     ["chats", profile?.id],
     async () => {
+      if (!profile) {
+        throw new Error("Character ID is undefined");
+      }
       const responses = await supabase
         .from("chats")
         .select(

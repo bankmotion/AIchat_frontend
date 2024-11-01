@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "start:dev": "vite",
+    "dev": "vite --host 0.0.0.0",
+    "start:dev": "vite --host 0.0.0.0",
     "start:dev:prod": "vite --mode prod",
     "build": "tsc && vite build && yarn gen:sitemap",
     "preview": "vite preview",
@@ -29,6 +29,7 @@
     "crc-32": "^1.2.2",
     "date-fns": "^2.29.3",
     "delay": "^5.0.0",
+    "exiftool-vendored": "^28.8.0",
     "gptoken": "^0.1.0",
     "lodash-es": "^4.17.21",
     "react": "^18.2.0",
@@ -39,7 +40,8 @@
     "react-query": "^3.39.3",
     "react-router-dom": "^6.8.1",
     "remark-gfm": "^3.0.1",
-    "styled-components": "^5.3.9"
+    "styled-components": "^5.3.9",
+    "uuid": "^11.0.2"
   },
   "devDependencies": {
     "@types/loadable__component": "^5.13.4",

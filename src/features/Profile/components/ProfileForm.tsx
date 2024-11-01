@@ -1,15 +1,17 @@
 import { supabase } from "../../../config";
 import { Input, Button, Upload, Form, App } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
+import { Link, useNavigate } from "react-router-dom";
 
 import { compressImage } from "../../../shared/services/image-utils";
+import { AppContext } from "../../../appContext";
 import { AxiosError } from "axios";
 import { FormContainer, VerifiedMark } from "../../../shared/components/shared";
 import { useQueryClient } from "react-query";
 import { getAvatarUrl, randomID } from "../../../shared/services/utils";
 import { profileService } from "../services/profile-service";
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useContext } from "react";
+
 
 interface FormValues {
   id: string;
@@ -27,6 +29,7 @@ export const ProfileForm = ({ values }: { values: FormValues }) => {
   const { message } = App.useApp();
   const [form] = Form.useForm<FormValues>();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
 
   const avatarPayloadWatch = Form.useWatch("avatar_payload", form);
 
@@ -37,18 +40,20 @@ export const ProfileForm = ({ values }: { values: FormValues }) => {
       let newAvatar = null;
       if (avatarImg) {
         const compressedImage = await compressImage(avatarImg);
-        const extension = compressedImage.name.substring(avatarImg.name.lastIndexOf(".") + 1);
-
+        const extension = compressedImage.name.substring(avatarImg.name.lastIndexOf(".") + 1);       
+        const filePath = `images/profile-avatars/${values.id}_${randomID()}.${extension}`;
         const result = await supabase.storage
-          .from("avatars")
-          .upload(`${values.id}_${randomID()}.${extension}`, compressedImage, {
+          .from("cdn.venusai.chat")
+          .upload(filePath, compressedImage, {
             cacheControl: "1209600", // 2 weeks
             upsert: true,
           });
+          console.log(result,"result")
         newAvatar = result.data && result.data.path;
       }
 
       const result = await profileService.updateProfile({
+        id:values.id,
         about_me,
         avatar: avatarImg ? newAvatar || undefined : values.avatar,
         name,
@@ -58,7 +63,13 @@ export const ProfileForm = ({ values }: { values: FormValues }) => {
 
       if (result) {
         message.success("Profile updated!");
+        // if(profile)
+        // setProfile({
+        //   ...profile,
+        //   avatar: values.avatar
+        // });
         queryClient.invalidateQueries("profile");
+        navigate(0);
       }
     } catch (err) {
       console.error("auth error", err);

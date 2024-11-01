@@ -1,6 +1,5 @@
 import { useContext } from "react";
 import { Typography, Spin, Button, Popconfirm, App } from "antd";
-
 import { AppContext } from "../../../appContext";
 import { ProfileForm } from "../components/ProfileForm";
 import { PageContainer } from "../../../shared/components/shared";
@@ -8,6 +7,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import { SITE_NAME, supabase } from "../../../config";
 import { profileUrl } from "../../../shared/services/url-utils";
+import { forEach } from "lodash-es";
 const { Title } = Typography;
 
 export const Profile = () => {
@@ -18,7 +18,32 @@ export const Profile = () => {
   // Just delete profile should be enough?
   const deleteAccount = async () => {
     message.info("Deleting your account...");
-    await supabase.from("user_profiles").delete().eq("id", profile?.id);
+    if (!profile) {
+      throw new Error("profile is undefined");
+    }
+    await supabase.from("user_reports").delete().eq("profile_id", profile?.id);
+    await supabase.from("reviews").delete().eq("user_id", profile?.id);
+    const {data, error } = await supabase.from('characters').select('id').eq("creator_id", profile?.id);
+    console.log(data,"data")
+    for (const characterId of data || []) {
+      console.log(characterId,"characterId")
+      await supabase.from("character_tags").delete().eq("character_id", characterId.id);
+      await supabase.from("reviews").delete().eq("character_id", profile?.id);
+  }
+    await supabase.from("characters").delete().eq("creator_id", profile?.id);
+    // await supabase.from("user_profiles").delete().eq("id", profile?.id);
+    await supabase
+    .from("user_profiles")
+    .update({
+        about_me: '',
+        avatar: '',
+        block_list: '',
+        config: '',
+        name: '',
+        user_name: '',
+        profile: ''
+    })
+    .eq("id", profile?.id);
     await supabase.auth.signOut();
     setSession(null);
     setProfile(null);
@@ -26,6 +51,8 @@ export const Profile = () => {
     navigate("/");
     message.success("Account sucessfully deleted!");
   };
+
+  console.log(profile,"profile")
 
   return (
     <PageContainer>

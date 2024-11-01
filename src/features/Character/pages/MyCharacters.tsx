@@ -20,9 +20,13 @@ export const MyCharacters: React.FC = () => {
   const { data, isLoading, refetch } = useQuery(
     ["characters", profile?.id],
     async () => {
+      if (!profile) {
+        throw new Error("Character ID is undefined");
+      }
+
       const responses = await supabase
         .from("characters")
-        .select("id, name, avatar, description, is_nsfw, is_public, tags(id, name, description)")
+        .select("id, name, avatar, description, is_nsfw, is_public, character_tags(tags (id, name, join_name))")
         .eq("creator_id", profile?.id)
         .order("updated_at", { ascending: false })
         .order("created_at", { ascending: false })

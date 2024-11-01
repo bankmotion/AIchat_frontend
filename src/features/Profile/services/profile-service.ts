@@ -1,3 +1,4 @@
+import { useContext } from "react";
 import { QueryClient } from "react-query";
 import { axiosInstance } from "../../../config";
 import {
@@ -7,14 +8,29 @@ import {
   ProfileUpdateDto,
 } from "../../../types/backend-alias";
 import { Profile } from "../../../types/profile";
+import { AppContext } from "../../../appContext";
 import { intersection } from "lodash-es";
 
+
 const getOwnProfile = async () => {
-  const response = await axiosInstance.get<Profile>("/profiles/mine");
+  const { session } = useContext(AppContext);
+
+  // Check if userId exists before sending
+  if (!session?.user?.id) {
+    throw new Error("User ID is required to fetch the profile.");
+  }
+
+  const userInfo = {
+    userId: session.user.id,
+  };
+
+  const response = await axiosInstance.post<Profile>("/profiles/mine", userInfo);
   return response.data;
 };
 
+
 const updateProfile = async ({
+  id,
   about_me,
   avatar,
   name,
@@ -24,6 +40,7 @@ const updateProfile = async ({
   block_list,
 }: ProfileUpdateDto) => {
   const response = await axiosInstance.patch<ProfileResponse>("/profiles/mine", {
+    id,
     about_me,
     avatar,
     name,
@@ -43,8 +60,8 @@ export const DEFAULT_BLOCK_LIST: BlockList = {
   tags: [],
 };
 
-export const updateBlockList = async (newBlockList: BlockList, queryClient: QueryClient) => {
-  const result = await updateProfile({ block_list: newBlockList });
+export const updateBlockList = async (newBlockList: BlockList, id:string, queryClient: QueryClient) => {
+  const result = await updateProfile({ block_list: newBlockList, id:id });
 
   await Promise.all([
     queryClient.invalidateQueries("profile"),
@@ -55,7 +72,16 @@ export const updateBlockList = async (newBlockList: BlockList, queryClient: Quer
 };
 
 export const getBlockedContent = async () => {
-  const blockedContent = await axiosInstance.get<BlockedContent>("/profiles/mine/blocked");
+  const { profile } = useContext(AppContext);
+  if (!profile?.id) {
+    throw new Error("Profile ID is missing");
+  }
+
+  const blockedContent = await axiosInstance.get<BlockedContent>(`/profiles/mine/blocked`, {
+    params: { id: profile.id },
+  });
+
+  console.log(blockedContent,"blockedContent")
 
   return blockedContent.data;
 };

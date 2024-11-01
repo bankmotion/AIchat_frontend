@@ -28,7 +28,7 @@ export const UserAvatar: React.FC = () => {
   }, []);
 
   return (
-    <Menu.Item className="no-padding" key="profile" style={{ marginLeft: isMobile ? "auto" : "" }}>
+    <Menu.Item className="no-padding" key="profile" style={{ marginLeft: isMobile ? "auto" : "", display:"flex" }}>
       <Dropdown
         menu={{
           items: [
@@ -71,7 +71,7 @@ export const UserAvatar: React.FC = () => {
         }}
       >
         {profile?.avatar ? (
-          <Avatar size="large" src={getAvatarUrl(profile.avatar)} />
+          <Avatar size="large" src={getAvatarUrl(profile.avatar)}/>
         ) : (
           <Avatar size="large" icon={<UserOutlined />} />
         )}
