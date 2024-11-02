@@ -5,6 +5,7 @@ import {
   UserAddOutlined,
   UserOutlined,
   WechatOutlined,
+  CrownOutlined,
 } from "@ant-design/icons";
 import { Avatar, Dropdown, Menu } from "antd";
 import { useCallback, useContext } from "react";
@@ -65,6 +66,18 @@ export const UserAvatar: React.FC = () => {
               icon: <CloseCircleOutlined />,
               label: "Blocks",
               onClick: () => navigate("/blocks"),
+            },
+            {
+              type: 'divider'
+            },
+            {
+              key: "pricing",
+              icon: <CrownOutlined style={{ color: '#FFD700' }} />,
+              label: "Upgrade to Premium",
+              onClick: () => navigate("/pricing"),
+            },
+            {
+              type: 'divider'
             },
             { key: "logout", label: "Logout", onClick: () => logout() },
           ],

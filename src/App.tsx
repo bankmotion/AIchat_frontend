@@ -14,6 +14,8 @@ import { getLocalData, UserLocalData, saveLocalData } from "./shared/services/us
 import { getUserConfig, updateUserConfig, UserConfig } from "./shared/services/user-config";
 import { MainLayout } from "./shared/MainLayout";
 import { profileService } from "./features/Profile/services/profile-service";
+import { PricingPage } from './features/ToC/pages/PricingPage';
+import { ProtectedRoute } from "./shared/components/ProtectedRoute";
 
 const Home = loadable(() => import("./features/Home/pages/Home"), {
   resolveComponent: (component) => component.Home,
@@ -110,10 +112,10 @@ const router = createBrowserRouter([
         element: <ResetPassword />,
       },
 
-      // Profile and Public Profile
+      // Protected Profile Routes
       {
         path: "/profile",
-        element: <ProfilePage />,
+        element: <ProtectedRoute><ProfilePage /></ProtectedRoute>,
       },
       {
         path: "/profiles/:profileId",
@@ -121,10 +123,10 @@ const router = createBrowserRouter([
       },
       {
         path: "/blocks",
-        element: <Blocks />,
+        element: <ProtectedRoute><Blocks /></ProtectedRoute>,
       },
 
-      // Characters
+      // Characters - Protected and Public Routes
       {
         path: "/search",
         element: <SearchCharacter />,
@@ -135,28 +137,28 @@ const router = createBrowserRouter([
       },
       {
         path: "/create_character",
-        element: <CreateCharacter />,
+        element: <ProtectedRoute><CreateCharacter /></ProtectedRoute>,
       },
       {
         path: "/edit_character/:characterId",
-        element: <EditCharacter />,
+        element: <ProtectedRoute><EditCharacter /></ProtectedRoute>,
       },
       {
         path: "/my_characters",
-        element: <MyCharacters />,
+        element: <ProtectedRoute><MyCharacters /></ProtectedRoute>,
       },
       {
         path: "/characters/:characterId",
         element: <ViewCharacter />,
       },
 
-      // Chat related
+      // Protected Chat Routes - only protect my_chats
       {
         path: "/my_chats",
-        element: <MyChats />,
+        element: <ProtectedRoute><MyChats /></ProtectedRoute>,
       },
 
-      // Toc
+      // Public ToC Routes
       {
         path: "/term",
         element: <TermOfUse />,
@@ -169,8 +171,13 @@ const router = createBrowserRouter([
         path: "/faq",
         element: <FAQ />,
       },
+      {
+        path: "pricing",
+        element: <ProtectedRoute><PricingPage /></ProtectedRoute>,
+      },
     ],
   },
+  // Chat page is public
   {
     path: "/chats/:chatId",
     element: <ChatPage />,
@@ -358,3 +365,4 @@ const App: React.FC = () => {
 };
 
 export default App;
+
