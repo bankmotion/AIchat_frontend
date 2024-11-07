@@ -84,7 +84,7 @@ const CHAT_COLUMN_PROPS: ColProps = { lg: 14, xs: 24, md: 18 };
 export const ChatPage: React.FC = () => {
   const { profile, config, localData } = useContext(AppContext);
   const { chatId } = useParams();
-
+  console.log(chatId, "chatId")
   const messageDivRef = useRef<HTMLDivElement>(null);
   const botChoiceDivRef = useRef<HTMLDivElement>(null);
 
@@ -93,8 +93,11 @@ export const ChatPage: React.FC = () => {
 
   const [chatState, dispatch] = useReducer(dispatchFunction, initialChatState);
   const { choiceIndex, messagesToDisplay } = chatState;
+  console.log(messagesToDisplay, 'messagesToDisplay')
   const mainMessages = messagesToDisplay.filter((message) => message.is_main);
   const botChoices = messagesToDisplay.filter((message) => message.is_bot && !message.is_main);
+  console.log(mainMessages, "mainMessages")
+  console.log(botChoices, "botChoices")
 
   const isImmersiveMode = Boolean(config?.immersive_mode);
   const readyToChat = chatService.readyToChat(config, localData);
@@ -157,6 +160,8 @@ export const ChatPage: React.FC = () => {
     () => Boolean(profile && profile.id === data?.chat.user_id),
     [profile, data?.chat.user_id]
   );
+
+  console.log(canEdit, data?.chat, "canEdit")
 
   const refreshChats = async () => {
     const newData = await refetch();
@@ -299,16 +304,142 @@ export const ChatPage: React.FC = () => {
     }
   };
 
+  // const generateChat = async (inputMessage: string) => {
+  //   try {
+  //     const canGenerateChat = readyToChat && inputMessage.length > 0 && !isGenerating;
+  //     if (!canGenerateChat) {
+  //       return;
+  //     }
+
+  //     setIsGenerating(true);
+
+  //     const localUserMessage: ChatMessageEntity = {
+  //       id: -2,
+  //       chat_id: 0,
+  //       created_at: "",
+  //       is_bot: false,
+  //       is_main: true,
+  //       message: inputMessage.trimEnd(),
+  //     };
+  //     const localBotMessage: ChatMessageEntity = {
+  //       id: -1,
+  //       chat_id: 0,
+  //       created_at: "",
+  //       is_bot: true,
+  //       is_main: false,
+  //       message: `${data?.chat.characters.name} is replying...`,
+  //     };
+
+  //     // Remove non is_main message
+  //     const choiceToKeep = botChoices[choiceIndex];
+  //     if (choiceToKeep) {
+  //       choiceToKeep.is_main = true;
+
+  //       // No await, but this might failed sometime lol...
+  //       chatService.updateMassage(chatId, choiceToKeep.id, {
+  //         is_main: true,
+  //       });
+  //     }
+  //     const choicesToDelete = botChoices.filter((v, i) => i !== choiceIndex);
+  //     if (choicesToDelete.length > 0) {
+  //       chatService.deleteMessages(
+  //         chatId,
+  //         choicesToDelete.map((message) => message.id)
+  //       );
+  //     }
+
+  //     // Assume deleting always success lol
+  //     dispatch({
+  //       type: "set_messages",
+  //       messages: [...chatState.messages.filter((message) => message.is_main)],
+  //     });
+  //     dispatch({
+  //       type: "new_client_messages",
+  //       messages: [localUserMessage, localBotMessage],
+  //     });
+  //     dispatch({ type: "set_index", newIndex: 0 });
+  //     scrollToBottom();
+
+  //     const insertUserMessagePromise = chatService.createMessage(chatId, localUserMessage);
+  //     insertUserMessagePromise.then().catch((err) => {
+  //       throw err;
+  //     }); // Call this first, get result later, ignore error lol
+
+  //     // Generate prompt back-end to get generated message
+  //     const prompt = generateInstance.buildPrompt(
+  //       inputMessage,
+  //       data?.chat!,
+  //       chatState.messages,
+  //       fullConfig
+  //     );
+
+  //     // This method might fail for multiple reasons, allow user to regenerate
+  //     const generatedTexts = await generateInstance.generate(prompt, fullConfig);
+
+  //     let streamingText = "";
+  //     for await (const text of generatedTexts) {
+  //       streamingText += text;
+  //       localBotMessage.message = streamingText;
+  //       dispatch({
+  //         type: "new_client_messages",
+  //         messages: [localUserMessage, localBotMessage],
+  //       });
+
+  //       scrollToBottom();
+  //     }
+
+  //     // This should have been runned before, now we just await for result
+  //     const serverUserMassage = await insertUserMessagePromise;
+
+  //     // If failed to create bot message, no need to save
+  //     if (streamingText !== "") {
+  //       // const serverBotMassage = await chatService.createMessage(chatId, localBotMessage);
+  //       // No awaiting this, so we can chat faster lol
+  //       chatService
+  //         .createMessage(chatId, localBotMessage)
+  //         .then((serverBotMassage) => {
+  //           dispatch({
+  //             type: "new_server_messages",
+  //             messages: [serverUserMassage, serverBotMassage],
+  //           });
+  //         })
+  //         .catch((err) => {
+  //           throw err;
+  //         });
+  //     } else {
+  //       dispatch({
+  //         type: "new_server_messages",
+  //         messages: [serverUserMassage],
+  //       });
+  //     }
+  //   } catch (err) {
+  //     const error = err as Error;
+  //     message.error(error.message, 3);
+
+  //     // Refetch on error to avoid out of sync
+  //     refreshChats();
+  //   } finally {
+  //     setIsGenerating(false);
+  //   }
+  // };
+
   const generateChat = async (inputMessage: string) => {
     try {
+      console.log("Starting generateChat function...");
+
+      // Step 1: Check if we can generate a chat
       const canGenerateChat = readyToChat && inputMessage.length > 0 && !isGenerating;
       if (!canGenerateChat) {
+        console.log("Cannot generate chat: Conditions not met (readyToChat, inputMessage length, or isGenerating flag).");
         return;
       }
 
+      console.log("Conditions met. Proceeding with chat generation...");
+
       setIsGenerating(true);
 
-      const localUserMessage: ChatMessageEntity = {
+      // Step 2: Define local messages for user and bot
+      const localUserMessage = {
         id: -2,
         chat_id: 0,
         created_at: "",
@@ -316,7 +447,7 @@ export const ChatPage: React.FC = () => {
         is_main: true,
         message: inputMessage.trimEnd(),
       };
-      const localBotMessage: ChatMessageEntity = {
+      const localBotMessage = {
         id: -1,
         chat_id: 0,
         created_at: "",
@@ -325,25 +456,31 @@ export const ChatPage: React.FC = () => {
         message: `${data?.chat.characters.name} is replying...`,
       };
 
-      // Remove non is_main message
+      console.log("User and bot local messages defined.", { localUserMessage, localBotMessage });
+
+      // Step 3: Manage is_main message status
       const choiceToKeep = botChoices[choiceIndex];
       if (choiceToKeep) {
         choiceToKeep.is_main = true;
+        console.log("Updating choiceToKeep message as main:", choiceToKeep);
 
-        // No await, but this might failed sometime lol...
-        chatService.updateMassage(chatId, choiceToKeep.id, {
-          is_main: true,
-        });
+        // Attempt to update main message
+        chatService.updateMassage(chatId, choiceToKeep.id, { is_main: true })
+          .then(() => console.log("Successfully updated message as main in chat service."))
+          .catch((err) => console.error("Failed to update message as main:", err));
       }
+
       const choicesToDelete = botChoices.filter((v, i) => i !== choiceIndex);
       if (choicesToDelete.length > 0) {
+        console.log("Deleting non-main choices from chat service:", choicesToDelete);
         chatService.deleteMessages(
           chatId,
           choicesToDelete.map((message) => message.id)
-        );
+        ).then(() => console.log("Deleted non-main messages successfully."))
+          .catch((err) => console.error("Failed to delete non-main messages:", err));
       }
 
-      // Assume deleting always success lol
+      // Step 4: Dispatch messages to the state
       dispatch({
         type: "set_messages",
         messages: [...chatState.messages.filter((message) => message.is_main)],
@@ -353,23 +490,24 @@ export const ChatPage: React.FC = () => {
         messages: [localUserMessage, localBotMessage],
       });
       dispatch({ type: "set_index", newIndex: 0 });
+      console.log("Dispatched initial messages to state.");
       scrollToBottom();
 
+      // Step 5: Create user message in chat service
+      console.log("Creating user message in chat service...");
       const insertUserMessagePromise = chatService.createMessage(chatId, localUserMessage);
-      insertUserMessagePromise.then().catch((err) => {
-        throw err;
-      }); // Call this first, get result later, ignore error lol
+      insertUserMessagePromise
+        .then(() => console.log("User message created successfully in chat service."))
+        .catch((err) => console.error("Failed to create user message in chat service:", err));
 
-      // Generate prompt back-end to get generated message
-      const prompt = generateInstance.buildPrompt(
-        inputMessage,
-        data?.chat!,
-        chatState.messages,
-        fullConfig
-      );
+      // Step 6: Build prompt and generate bot response
+      const prompt = generateInstance.buildPrompt(inputMessage, data?.chat!, chatState.messages, fullConfig);
+      console.log("Prompt built for bot generation:", prompt);
+      console.log(fullConfig, 'fullConfig')
 
-      // This method might fail for multiple reasons, allow user to regenerate
+      // Step 7: Stream generated text
       const generatedTexts = await generateInstance.generate(prompt, fullConfig);
+      console.log("Generating bot response...", generatedTexts);
 
       let streamingText = "";
       for await (const text of generatedTexts) {
@@ -380,43 +518,48 @@ export const ChatPage: React.FC = () => {
           messages: [localUserMessage, localBotMessage],
         });
 
+        console.log("Streaming bot response:", streamingText);
         scrollToBottom();
       }
 
-      // This should have been runned before, now we just await for result
-      const serverUserMassage = await insertUserMessagePromise;
+      // Step 8: Handle server message creation
+      const serverUserMessage = await insertUserMessagePromise;
+      console.log("User message stored in server:", serverUserMessage);
 
-      // If failed to create bot message, no need to save
       if (streamingText !== "") {
-        // const serverBotMassage = await chatService.createMessage(chatId, localBotMessage);
-        // No awaiting this, so we can chat faster lol
+        console.log("Creating bot message in chat service...");
         chatService
           .createMessage(chatId, localBotMessage)
-          .then((serverBotMassage) => {
+          .then((serverBotMessage) => {
+            console.log("Bot message created in chat service:", serverBotMessage);
             dispatch({
               type: "new_server_messages",
-              messages: [serverUserMassage, serverBotMassage],
+              messages: [serverUserMessage, serverBotMessage],
             });
           })
           .catch((err) => {
-            throw err;
+            console.error("Failed to create bot message in chat service:", err);
           });
       } else {
+        console.log("Bot message generation failed. Only storing user message.");
         dispatch({
           type: "new_server_messages",
-          messages: [serverUserMassage],
+          messages: [serverUserMessage],
         });
       }
     } catch (err) {
       const error = err as Error;
+      console.error("An error occurred in generateChat:", error);
       message.error(error.message, 3);
 
-      // Refetch on error to avoid out of sync
+      console.log("Refreshing chat data due to error.");
       refreshChats();
     } finally {
+      console.log("Resetting isGenerating flag.");
       setIsGenerating(false);
     }
   };
+
 
   const editMessage = async (item: SupaChatMessage, messageId: number, newMessage: string) => {
     item.message = newMessage; // Local edit
@@ -447,7 +590,7 @@ export const ChatPage: React.FC = () => {
         </div>
       )}
 
-      {data && (
+      {data && canEdit && (
         <>
           {data.chat.is_public ? (
             <Helmet>

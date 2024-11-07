@@ -15,6 +15,8 @@ export const Profile = () => {
   const { profile, setSession, setProfile } = useContext(AppContext);
   const navigate = useNavigate();
 
+  console.log(profile,"sssdfdfd")
+
   // Just delete profile should be enough?
   const deleteAccount = async () => {
     message.info("Deleting your account...");

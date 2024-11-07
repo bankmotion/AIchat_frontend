@@ -210,6 +210,8 @@ export interface components {
       user_name?: string;
       config?: Record<string, never>;
       block_list?: components["schemas"]["BlockList"];
+      is_nsfw?:boolean,
+      is_blur?:boolean
     };
     ProfileResponse: {
       id: string;

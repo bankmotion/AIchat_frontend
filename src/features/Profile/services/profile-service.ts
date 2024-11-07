@@ -38,6 +38,9 @@ const updateProfile = async ({
   user_name,
   config,
   block_list,
+  is_nsfw,
+  is_blur
+
 }: ProfileUpdateDto) => {
   const response = await axiosInstance.patch<ProfileResponse>("/profiles/mine", {
     id,
@@ -48,6 +51,9 @@ const updateProfile = async ({
     user_name,
     config,
     block_list,
+    is_nsfw,
+    is_blur
+
   });
   const result = response.data;
 
@@ -60,8 +66,8 @@ export const DEFAULT_BLOCK_LIST: BlockList = {
   tags: [],
 };
 
-export const updateBlockList = async (newBlockList: BlockList, id:string, queryClient: QueryClient) => {
-  const result = await updateProfile({ block_list: newBlockList, id:id });
+export const updateBlockList = async (newBlockList: BlockList, id: string, queryClient: QueryClient) => {
+  const result = await updateProfile({ block_list: newBlockList, id: id });
 
   await Promise.all([
     queryClient.invalidateQueries("profile"),
@@ -81,7 +87,7 @@ export const getBlockedContent = async () => {
     params: { id: profile.id },
   });
 
-  console.log(blockedContent,"blockedContent")
+  console.log(blockedContent, "blockedContent")
 
   return blockedContent.data;
 };

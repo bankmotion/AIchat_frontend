@@ -1,3 +1,5 @@
+import { useContext } from "react";
+import { AppContext } from "../../appContext";
 import { profileService } from "../../features/Profile/services/profile-service";
 import { Json } from "../../types/supabase";
 import { GenerationSetting, OPEN_AI_DEFAULT_GENERATION_SETTINGS } from "./generation-setting";
@@ -63,10 +65,9 @@ export const getUserConfig = (config?: Json | Partial<UserConfig>) => {
   return { ...defaultUserConfig, ...config };
 };
 
-export const updateUserConfig = (config: Partial<UserConfig>) => {
+export const updateUserConfig = (config: Partial<UserConfig>, profileId:string) => {
   const newConfig = getUserConfig(config);
-
-  profileService.updateProfile({ config: newConfig as any }); // This is an async call, just ignore it
-
+  console.log(newConfig, profileId,"newConfig");
+  profileService.updateProfile({ config: newConfig as any, id:profileId }); // This is an async call, just ignore it
   return newConfig;
 };

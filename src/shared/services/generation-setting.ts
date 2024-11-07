@@ -9,7 +9,7 @@ export interface GenerationSetting {
 
 export const OPEN_AI_DEFAULT_GENERATION_SETTINGS: GenerationSetting = {
   temperature: 1,
-  max_new_token: 0,
+  max_new_token: 100,
   context_length: 4096,
 };
 

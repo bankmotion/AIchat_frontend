@@ -1,5 +1,5 @@
 import { supabase } from "../../../config";
-import { Input, Button, Upload, Form, App } from "antd";
+import { Input, Button, Upload, Form, App, Radio  } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -22,6 +22,8 @@ interface FormValues {
   profile: string;
   user_name: string | null;
   is_verified?: boolean;
+  is_nsfw?:boolean;
+  is_blur?:boolean;
 }
 
 export const ProfileForm = ({ values }: { values: FormValues }) => {
@@ -29,18 +31,21 @@ export const ProfileForm = ({ values }: { values: FormValues }) => {
   const { message } = App.useApp();
   const [form] = Form.useForm<FormValues>();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { profile :Profile, setSession, setProfile } = useContext(AppContext); 
   const navigate = useNavigate();
 
   const avatarPayloadWatch = Form.useWatch("avatar_payload", form);
 
-  const onFinish = async ({ avatar_payload, name, user_name, profile, about_me }: FormValues) => {
+  console.log(Profile,"profile")
+
+  const onFinish = async ({ avatar_payload, name, user_name, profile, about_me, is_nsfw,  is_blur }: FormValues) => {
     try {
       setIsSubmitting(true);
       const avatarImg = avatar_payload?.file;
       let newAvatar = null;
       if (avatarImg) {
         const compressedImage = await compressImage(avatarImg);
-        const extension = compressedImage.name.substring(avatarImg.name.lastIndexOf(".") + 1);       
+        const extension = compressedImage.name.substring(avatarImg.name.lastIndexOf(".") + 1);
         const filePath = `images/profile-avatars/${values.id}_${randomID()}.${extension}`;
         const result = await supabase.storage
           .from("cdn.venusai.chat")
@@ -48,26 +53,28 @@ export const ProfileForm = ({ values }: { values: FormValues }) => {
             cacheControl: "1209600", // 2 weeks
             upsert: true,
           });
-          console.log(result,"result")
+        console.log(result, "result")
         newAvatar = result.data && result.data.path;
       }
 
       const result = await profileService.updateProfile({
-        id:values.id,
+        id: values.id,
         about_me,
         avatar: avatarImg ? newAvatar || undefined : values.avatar,
         name,
         profile,
         user_name: user_name ? user_name : undefined,
+        is_nsfw,
+        is_blur
       });
 
       if (result) {
         message.success("Profile updated!");
-        // if(profile)
-        // setProfile({
-        //   ...profile,
-        //   avatar: values.avatar
-        // });
+        if (Profile)
+          setProfile({
+            ...Profile,
+            avatar: values.avatar
+          });
         queryClient.invalidateQueries("profile");
         navigate(0);
       }
@@ -198,6 +205,26 @@ export const ProfileForm = ({ values }: { values: FormValues }) => {
             rows={4}
             placeholder="A horny 25 year old male, with short black hair and a big beer belly."
           />
+        </Form.Item>
+
+        <Form.Item
+          name="is_nsfw"
+          label="NSFW Toggle"
+        >
+          <Radio.Group>
+            <Radio value={false}>Show SFW Only</Radio>
+            <Radio value={true}>Show NSFW</Radio>
+          </Radio.Group>
+        </Form.Item>
+
+        <Form.Item
+          name="is_blur"
+          label="Blur Toggle"
+        >
+          <Radio.Group>
+            <Radio value={true}>Blur NSFW Images</Radio>
+            <Radio value={false}>Unblur NSFW Images</Radio>
+          </Radio.Group>
         </Form.Item>
 
         <Form.Item

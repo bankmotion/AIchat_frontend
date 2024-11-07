@@ -41,6 +41,8 @@ export const ReviewPanel: React.FC<ReviewPanelProps> = ({ reviews, characterId, 
 
   );
 
+  console.log(reviews,"reviews", profile, "profile", creator,"creator")
+
   const deleteReview = async () => {
     if (!profile || !characterId) {
       return;

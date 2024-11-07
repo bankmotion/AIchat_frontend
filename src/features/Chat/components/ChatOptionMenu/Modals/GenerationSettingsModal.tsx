@@ -29,11 +29,11 @@ export const GenerationSettingsModal: React.FC<ChatSettingsModalProps> = ({
   const [form] = Form.useForm<FormValues>();
 
   // This shouldn't happen because user should see config
-  if (!config) {
-    return null;
-  }
+  // if (!config) {
+  //   return null;
+  // }
 
-  const initialValues: FormValues = useMemo(() => ({ ...config.generation_settings }), [config]);
+  // const initialValues: FormValues = useMemo(() => ({ ...config.generation_settings }), [config]);
 
   const onFinish = (formValues: FormValues) => {
     const newConfig: Partial<UserConfig> = {
@@ -68,7 +68,7 @@ export const GenerationSettingsModal: React.FC<ChatSettingsModalProps> = ({
           wrapperCol={{ span: 18 }}
           form={form}
           onFinish={onFinish}
-          initialValues={initialValues}
+          // initialValues={initialValues}
         >
           <Form.Item label="Preset settings" className="mb-6 pt-2">
             <Space.Compact block>
@@ -124,7 +124,6 @@ export const GenerationSettingsModal: React.FC<ChatSettingsModalProps> = ({
             />
           </Form.Item>
 
-          {config.api === "kobold" && (
             <>
               <Title level={5}>KoboldAI Settings</Title>
 
@@ -137,7 +136,9 @@ export const GenerationSettingsModal: React.FC<ChatSettingsModalProps> = ({
                 <Slider marks={{ 1: "1", 1.5: "1.5" }} min={1} max={1.5} step={0.05} />
               </Form.Item>
             </>
-          )}
+            
+          {/* {config.api === "kobold" && ( */}
+          {/* // )} */}
         </Form>
       </div>
     </Modal>

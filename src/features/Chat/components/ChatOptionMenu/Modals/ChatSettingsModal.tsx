@@ -48,9 +48,9 @@ export const ChatSettingsModal: React.FC<ChatSettingsModalProps> = ({ open, onMo
   const [form] = Form.useForm<FormValues>();
 
   // This shouldn't happen because user should see config
-  // if (!config) {
-  //   return null;
-  // }
+  if (!config) {
+    return null;
+  }
 
   const apiWatch = Form.useWatch<string>("api", form);
   const apiModeWatch = Form.useWatch<string>("open_ai_mode", form);
@@ -58,12 +58,12 @@ export const ChatSettingsModal: React.FC<ChatSettingsModalProps> = ({ open, onMo
   const openAIProxyWatch = Form.useWatch<string>("open_ai_reverse_proxy", form);
   const apiUrlWatch = Form.useWatch<string>("api_url", form);
 
-  // const initialValues: FormValues = { ...localData, ...config };
+  const initialValues: FormValues = { ...localData, ...config };
   // const initialValues: FormValues = { ...localData, ...config };
 
   const onFinish = (formValues: FormValues) => {
-    // const updateApiSetting = formValues.api !== initialValues.api;
-    const updateApiSetting = formValues.api;
+    const updateApiSetting = formValues.api !== initialValues.api;
+    // const updateApiSetting = formValues.api;
     let shouldUpdateGenerationSetting = false;
     if (updateApiSetting) {
       if (formValues.api === "openai") {
@@ -94,7 +94,7 @@ export const ChatSettingsModal: React.FC<ChatSettingsModalProps> = ({ open, onMo
       open_ai_reverse_proxy: formValues.open_ai_reverse_proxy,
       jailbreak_prompt: formValues.jailbreak_prompt,
 
-      // api_url: formValues.api_url || config.api_url,
+      api_url: formValues.api_url || config.api_url,
     };
     if (shouldUpdateGenerationSetting) {
       if (formValues.api === "openai") {
@@ -197,7 +197,7 @@ export const ChatSettingsModal: React.FC<ChatSettingsModalProps> = ({ open, onMo
           wrapperCol={{ span: 18 }}
           form={form}
           onFinish={onFinish}
-          // initialValues={initialValues}
+          initialValues={initialValues}
         >
           <Form.Item
             name="api"

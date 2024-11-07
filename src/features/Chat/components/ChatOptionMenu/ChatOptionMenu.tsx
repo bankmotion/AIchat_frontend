@@ -45,7 +45,7 @@ export const ChatOptionMenu: React.FC<ChatOptionMenuProps> = ({ chat, onReload, 
   const createChat = async () => {
     try {
       setIsCreatingChat(true);
-      const newChat = await chatService.createChat(chat.character_id!);
+      const newChat = await chatService.createChat(chat.character_id!, chat.user_id);
 
       if (newChat) {
         // Lol this will not refresh, just hard refresh instead
@@ -105,17 +105,21 @@ export const ChatOptionMenu: React.FC<ChatOptionMenuProps> = ({ chat, onReload, 
   };
 
   // Do not display when user not logged in
-  // if (!profile || !config) {
-  //   console.log(config,"config")
-  //   return null;
-  // }
+  if (!profile || !config) {
+    console.log(config,"config")
+    console.log(profile,"profile")
+    return null;
+  }
+
+  console.log(config,"config")
+  console.log(profile,"profile")
 
   return (
     <>
       <span style={{ marginLeft: "auto" }}>
         {readyToChat ? (
-          // <Tag color="green">API is ready. Using {config.api}.</Tag>
-          <Tag color="green">green</Tag>
+          <Tag color="green">API is ready. Using {config.api}.</Tag>
+          // <Tag color="green">green</Tag>
         ) : (
           <Tag
             style={{ cursor: "pointer" }}
@@ -242,8 +246,8 @@ export const ChatOptionMenu: React.FC<ChatOptionMenuProps> = ({ chat, onReload, 
                   <div style={{ whiteSpace: "pre" }} onClick={(e) => e.stopPropagation()}>
                     <Switch
                       className="mr-2"
-                      // defaultChecked={config.immersive_mode}
-                      // onChange={(checked) => updateConfig({ ...config, immersive_mode: checked })}
+                      defaultChecked={config.immersive_mode}
+                      onChange={(checked) => updateConfig({ ...config, immersive_mode: checked })}
                     />
                     Immersive mode
                   </div>
@@ -257,8 +261,8 @@ export const ChatOptionMenu: React.FC<ChatOptionMenuProps> = ({ chat, onReload, 
                   <div onClick={(e) => e.stopPropagation()}>
                     <Switch
                       className="mr-2"
-                      // defaultChecked={config.text_streaming}
-                      // onChange={(checked) => updateConfig({ ...config, text_streaming: checked })}
+                      defaultChecked={config.text_streaming}
+                      onChange={(checked) => updateConfig({ ...config, text_streaming: checked })}
                     />
                     Text streaming
                   </div>

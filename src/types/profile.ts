@@ -10,6 +10,8 @@ export interface Profile {
   user_name: string | null;
   is_verified?: boolean;
   config: Json;
+  is_nsfw?:boolean;
+  is_blur?:boolean;
   // block_list?:Json;
 
   block_list?: BlockList | null;

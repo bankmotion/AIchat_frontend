@@ -153,7 +153,7 @@ export const Home: React.FC = () => {
         <link rel="canonical" href="https://venusai.chat" />
       </Helmet>
 
-      {profile && (
+      {/* {profile && (
         <div>
           {isChatLoading && <Spin />}
           {chatData && chatData.length > 0 && (
@@ -166,7 +166,7 @@ export const Home: React.FC = () => {
             </div>
           )}
         </div>
-      )}
+      )} */}
 
       <Radio.Group
         className="mb-4"

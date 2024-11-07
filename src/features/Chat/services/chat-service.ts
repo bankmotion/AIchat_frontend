@@ -12,10 +12,12 @@ import {
 
 type ChatID = number | string | undefined;
 
-const createChat = async (characterId: string) => {
+const createChat = async (characterId: string, ProfileId:string) => {
   const newChat = await axiosInstance.post<ChatEntity>("chats", {
     character_id: characterId,
+    profile_id:ProfileId
   });
+  console.log(ProfileId,"ProfileId")
   return newChat.data;
 };
 
@@ -35,6 +37,7 @@ const deleteChat = async (chatId: ChatID) => {
   if (!chatId) {
     throw new Error("chatId is undefined");
   }
+  await supabase.from("chat_messages").delete().eq("chat_id", chatId);
   await supabase.from("chats").delete().eq("id", chatId);
 };
 

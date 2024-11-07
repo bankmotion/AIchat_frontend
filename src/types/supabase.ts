@@ -200,6 +200,8 @@ export interface Database {
           name: string
           profile: string
           user_name: string | null
+          is_nsfw:boolean
+          is_blur:boolean
         }
         Insert: {
           about_me?: string
@@ -211,6 +213,8 @@ export interface Database {
           name?: string
           profile?: string
           user_name?: string | null
+          is_nsfw?:boolean
+          is_blur?:boolean
         }
         Update: {
           about_me?: string
@@ -222,6 +226,8 @@ export interface Database {
           name?: string
           profile?: string
           user_name?: string | null
+          is_nsfw?:boolean
+          is_blur?:boolean
         }
       }
       user_reports: {

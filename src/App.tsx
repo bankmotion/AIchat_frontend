@@ -202,8 +202,8 @@ const App: React.FC = () => {
           return getUserConfig(newConfig);
         }
 
-        if (!isEqual(oldConfig, newConfig)) {
-          return updateUserConfig(newConfig);
+        if (!isEqual(oldConfig, newConfig) && profile) {
+          return updateUserConfig(newConfig, profile.id);
         }
 
         return getUserConfig(newConfig);
@@ -276,10 +276,14 @@ const App: React.FC = () => {
             profile: fetchedProfile.profile,
             user_name: fetchedProfile.user_name,
             config: fetchedProfile.config,
+            is_nsfw:fetchedProfile.is_nsfw,
+            is_blur:fetchedProfile.is_blur
           };
           console.log("5")
           // Update the profile state
           setProfile(validatedProfile);
+          console.log(validatedProfile.config,"validatedProfile.config")
+          updateConfig(getUserConfig(validatedProfile.config));
           console.log("6")
           // Show success message and navigate
           // message.success("Account created successfully. Please set your username.");
@@ -317,6 +321,7 @@ const App: React.FC = () => {
 
         if (profileData) {
           setProfile(profileData);
+          console.log("sdfewfwewwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww")
           updateConfig(getUserConfig(profileData.config));
         }
       },

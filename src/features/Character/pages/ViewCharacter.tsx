@@ -143,14 +143,14 @@ export const ViewCharacter: React.FC = () => {
       const existingChat = await supabase
         .from("chats")
         .select("id")
-        .match({ character_id: characterId })
+        .match({ character_id: characterId,user_id:profile.id })
         .order("created_at", { ascending: false })
         .maybeSingle();
 
       if (existingChat.data) {
         navigate(`/chats/${existingChat.data.id}`);
       } else {
-        const newChat = await chatService.createChat(characterId!);
+        const newChat = await chatService.createChat(characterId!, profile.id!);
 
         if (newChat) {
           navigate(`/chats/${newChat.id}`);

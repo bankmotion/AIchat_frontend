@@ -1,7 +1,9 @@
+import axios, { AxiosError } from "axios";
 import { UserConfigAndLocalData } from "../../../shared/services/user-config";
 import { SupaChatMessage, ChatEntityWithCharacter } from "../../../types/backend-alias";
 import { Profile } from "../../../types/profile";
 import { OpenAIInputMessage } from "./types/openai";
+import { OpenAIError, OpenAIResponse } from "./types/openai";
 
 // Estimate token length only, should divide by 4.4 but left some as buffer
 export const getTokenLength = (messages: OpenAIInputMessage[]) =>
@@ -44,11 +46,10 @@ export const buildSystemInstruction = (
     .replace(/[\n\t]/g, "")
     .replaceAll("    ", "");
 
-  const systemInstruction = `${promptWithCharInfo}.${
-    includeExampleDialog && example_dialogs
-      ? `Example conversations between {{char}} and {{user}}: ${example_dialogs}.`
-      : ""
-  }`;
+  const systemInstruction = `${promptWithCharInfo}.${includeExampleDialog && example_dialogs
+    ? `Example conversations between {{char}} and {{user}}: ${example_dialogs}.`
+    : ""
+    }`;
 
   return systemInstruction;
 };
@@ -57,36 +58,70 @@ export const callOpenAI = async (
   messages: OpenAIInputMessage[],
   config: UserConfigAndLocalData
 ) => {
-  const baseUrl =
-    config.open_ai_mode === "api_key" ? "https://api.openai.com/v1" : config.open_ai_reverse_proxy;
+  // try {
+    const baseUrl =
+      config.open_ai_mode === "api_key" ? "https://api.openai.com/v1" : config.open_ai_reverse_proxy;
 
-  const authorizationHeader = (() => {
-    if (config.open_ai_mode === "api_key" && config.openAIKey) {
-      return `Bearer ${config.openAIKey}`;
-    }
+    const authorizationHeader = (() => {
+      if (config.open_ai_mode === "api_key" && config.openAIKey) {
+        return `Bearer ${config.openAIKey}`;
+      }
 
-    if (config.open_ai_mode === "proxy" && config.reverseProxyKey) {
-      return `Bearer ${config.reverseProxyKey}`;
-    }
+      if (config.open_ai_mode === "proxy" && config.reverseProxyKey) {
+        return `Bearer ${config.reverseProxyKey}`;
+      }
 
-    return "";
-  })();
+      return "";
+    })();
 
-  const response = await fetch(`${baseUrl}/chat/completions`, {
-    referrer: "",
-    body: JSON.stringify({
-      model: config.model,
-      temperature: config.generation_settings.temperature,
-      max_tokens: config.generation_settings.max_new_token || undefined,
-      stream: shouldUseTextStreaming(config),
-      messages,
-    }),
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      ...(authorizationHeader.length > 0 && { Authorization: authorizationHeader }),
-    },
-  });
+    console.log(config, config.model, config.generation_settings.temperature, config.generation_settings.max_new_token, messages)
 
-  return response;
+    const response = await fetch(`${baseUrl}/chat/completions`, {
+      referrer: "",
+      body: JSON.stringify({
+        model: config.model,
+        temperature: config.generation_settings.temperature,
+        max_tokens: config.generation_settings.max_new_token || undefined,
+        stream: shouldUseTextStreaming(config),
+        messages,
+      }),
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        ...(authorizationHeader.length > 0 && { Authorization: authorizationHeader }),
+      },
+    });
+
+    console.log(response,"openairesponse")
+
+    return response;
+  //   const response = await axios.post<OpenAIResponse>(
+  //     `${baseUrl}/chat/completions`,
+  //     {
+  //       model: config.model,
+  //       temperature: config.generation_settings.temperature,
+  //       max_tokens: config.generation_settings.max_new_token || undefined,
+  //       stream: shouldUseTextStreaming(config),
+  //       messages,
+  //     },
+  //     {
+  //       headers: {
+  //         ...(authorizationHeader.length > 0 && { Authorization: authorizationHeader }),
+  //       },
+  //       responseType: shouldUseTextStreaming(config) ? 'stream' : 'json',
+  //     }
+  //   );
+
+  //   console.log(response, "openairesponse")
+  //   return response
+  // } catch (err) {
+  //   const axiosError = err as AxiosError<{ error: OpenAIError }>;
+
+  //   console.error(axiosError.response?.data);
+
+  //   const error = axiosError.response?.data?.error;
+  //   if (error) {
+  //     return { error };
+  //   }
+  // }
 };

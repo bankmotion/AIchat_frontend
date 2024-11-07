@@ -57,6 +57,8 @@ export const Register = () => {
             block_list: { bots: [], creators: [], tags: [] }, // Default empty block list
             is_verified: false,
             config: {}, // Default configuration
+            is_nsfw:false,
+            is_blur:true
             // Add any other profile fields needed
           };
 
@@ -109,7 +111,9 @@ export const Register = () => {
                 name: fetchedProfile.name,
                 profile: fetchedProfile.profile,
                 user_name: fetchedProfile.user_name,
-                config: fetchedProfile.config
+                config: fetchedProfile.config,
+                is_nsfw: fetchedProfile.is_nsfw,
+                is_blur:fetchedProfile.is_blur
               };
               setProfile(validatedProfile);
             }
@@ -161,6 +165,8 @@ export const Register = () => {
         block_list: { bots: [], creators: [], tags: [] }, // Default empty block list
         is_verified: false,
         config: {}, // Default configuration
+        is_nsfw:false,
+        is_blur:true
       };
 
       const { data, error: profileInsertError } = await supabase
@@ -178,6 +184,8 @@ export const Register = () => {
         .from("user_profiles")
         .select("*")
         .eq("id", session.user.id);
+
+        console.log(profileDataFetched,"profileDataFetched")
 
       if (profileFetchError) {
         console.error("Error fetching profile:", profileFetchError);
@@ -216,6 +224,8 @@ export const Register = () => {
           profile: fetchedProfile.profile,
           user_name: fetchedProfile.user_name,
           config: fetchedProfile.config,
+          is_nsfw:fetchedProfile.is_nsfw,
+          is_blur:fetchedProfile.is_blur
         };
 
         // Update the profile state

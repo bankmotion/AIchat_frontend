@@ -99,9 +99,10 @@ class OpenAIGenerate extends GenerateInterface {
 
     // Slaude return null Content-Type lol
     const stream =
-      result.headers.get("Content-Type") === "text/event-stream" ||
+      result.headers.get("Content-Type") === "text/event-stream; charset=utf-8" ||
       result.headers.get("Content-Type") === null;
-
+    console.log(stream, "stream")
+    console.log(result.headers.get("Content-Type"), "result.headers.get(")
     if (!stream) {
       const response = await result.json();
       if ("choices" in response) {
