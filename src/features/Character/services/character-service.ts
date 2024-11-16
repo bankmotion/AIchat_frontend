@@ -71,3 +71,15 @@ export const postReview = async (payload: CreateReviewDto) => {
 
   return result.data;
 };
+
+export const getSimilarCharacters = async (characterId: string, isNsfw: any) => {
+  console.log(isNsfw,"isNsfw")
+  const result = await axiosInstance.get<CharacterView[]>(
+    `/characters/similarCharacters/${characterId}`, 
+    {
+      params: { isNsfw },
+    }
+  );
+
+  return result.data;
+};

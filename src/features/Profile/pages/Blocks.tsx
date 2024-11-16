@@ -40,12 +40,9 @@ export const Blocks = () => {
 
         // Ensure profile exists before attempting to fetch
         if (profile?.id) {
-          console.log("sdfsdfsdfdsfsdfsdfsfsdfsdfdsfdsfdsfsdf")
           const response = await axiosInstance.get<BlockedContent>(`/profiles/mine/blocked?id=${profile.id}`);
           const botIds = response.data.bots;
           console.log(botIds, "botIds")
-          // const botIds = response.data.bots;
-          // console.log(botIds, "botIds");
 
           const botData = await Promise.all(
             botIds.map(async (botId: string) => {

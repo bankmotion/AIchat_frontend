@@ -1,28 +1,22 @@
 import {
-  SlidersOutlined,
-  BookOutlined,
   WechatOutlined,
-  LinkOutlined,
   MenuOutlined,
-  SaveOutlined,
   LoadingOutlined,
-  ToolOutlined,
   CopyOutlined,
+  SettingOutlined,
 } from "@ant-design/icons";
-import { Tag, Dropdown, Tooltip, Switch, Button, App, Input, Space } from "antd";
-import { AxiosError } from "axios";
+import { Tag, Dropdown, Tooltip, Button, App } from "antd";
 
-import { useContext, useState } from "react";
+import { useContext, useMemo, useState } from "react";
 import { useQueryClient } from "react-query";
+import { useNavigate } from "react-router-dom";
 
 import { AppContext } from "../../../../appContext";
 import { chatService } from "../../services/chat-service";
 import { ChatEntityWithCharacter } from "../../../../types/backend-alias";
-import { ChatHistoryModal } from "./Modals/ChatHistoryModal";
-import { ChatSettingsModal } from "./Modals/ChatSettingsModal";
-import { ChatSummaryModal } from "./Modals/ChatSummaryModal";
-import { GenerationSettingsModal } from "./Modals/GenerationSettingsModal";
+import { AdvancedSettingsModal } from "./Modals/AdvancedSettingsModal";
 import { copyToClipboard } from "../../../../shared/services/utils";
+import { UserConfigAndLocalData } from "../../../../shared/services/user-config";
 
 interface ChatOptionMenuProps {
   chat: ChatEntityWithCharacter;
@@ -31,16 +25,16 @@ interface ChatOptionMenuProps {
 }
 
 export const ChatOptionMenu: React.FC<ChatOptionMenuProps> = ({ chat, onReload, readyToChat }) => {
-  const { profile, config, updateConfig } = useContext(AppContext);
+  const { profile, config, updateConfig, localData } = useContext(AppContext);
+  const userType = profile?.user_type;
   const queryClient = useQueryClient();
   const { modal, message } = App.useApp();
+  const navigate = useNavigate();
 
   const [isCreatingChat, setIsCreatingChat] = useState(false);
   const [isSharingChat, setIsSharingChat] = useState(false);
-  const [openChatHistoryModal, setOpenChatHistoryModal] = useState(false);
   const [openChatSettingsModal, setOpenChatSettingsModal] = useState(false); // For testing
-  const [openChatSummaryModal, setOpenChatSummaryModal] = useState(false);
-  const [openGenerationSettingsModal, setOpenGenerationSettingsModal] = useState(false);
+  const [openAdvancedSettingsModal, setOpenAdvancedSettingsModal] = useState(false);
 
   const createChat = async () => {
     try {
@@ -48,9 +42,6 @@ export const ChatOptionMenu: React.FC<ChatOptionMenuProps> = ({ chat, onReload, 
       const newChat = await chatService.createChat(chat.character_id!, chat.user_id);
 
       if (newChat) {
-        // Lol this will not refresh, just hard refresh instead
-        // navigate(`/chats/${newChat.id}`);
-
         location.href = `/chats/${newChat.id}`;
       }
     } catch (err) {
@@ -60,66 +51,20 @@ export const ChatOptionMenu: React.FC<ChatOptionMenuProps> = ({ chat, onReload, 
     }
   };
 
-  const shareChat = async () => {
-    try {
-      setIsSharingChat(true);
-
-      let shouldShowSuccessModal = true;
-      if (!chat.is_public) {
-        const updatedChat = await chatService.updateChat(chat.id, { is_public: true });
-        shouldShowSuccessModal = !!updatedChat;
-      }
-
-      if (shouldShowSuccessModal) {
-        // Refresh in ChatPage
-        const currentUrl = location.href;
-
-        queryClient.invalidateQueries(["chat", chat.id]);
-        modal.success({
-          title: "Chat ready for sharing!",
-          content: (
-            <div>
-              <p>Your can share your chat using this link:</p>
-              <Space.Compact className="my-2" block>
-                <Input value={currentUrl} />
-                <Button
-                  onClick={() => {
-                    copyToClipboard(currentUrl);
-                    message.info("Link copied to clipboard!");
-                  }}
-                >
-                  <CopyOutlined /> Copy
-                </Button>
-              </Space.Compact>
-            </div>
-          ),
-        });
-      }
-    } catch (err) {
-      console.error("error", err);
-      const backEndError = (err as AxiosError).response?.data;
-      message.error(JSON.stringify(backEndError, null, 2));
-    } finally {
-      setIsSharingChat(false);
-    }
-  };
-
   // Do not display when user not logged in
   if (!profile || !config) {
-    console.log(config,"config")
-    console.log(profile,"profile")
     return null;
   }
 
-  console.log(config,"config")
-  console.log(profile,"profile")
+  const fullConfig: UserConfigAndLocalData = useMemo(() => {
+    return { ...localData, ...config! };
+  }, [localData, config]);
 
   return (
     <>
       <span style={{ marginLeft: "auto" }}>
         {readyToChat ? (
           <Tag color="green">API is ready. Using {config.api}.</Tag>
-          // <Tag color="green">green</Tag>
         ) : (
           <Tag
             style={{ cursor: "pointer" }}
@@ -129,7 +74,6 @@ export const ChatOptionMenu: React.FC<ChatOptionMenuProps> = ({ chat, onReload, 
             API not ready! Click to setup.
           </Tag>
         )}
-        {/* <Tag color="green">green</Tag> */}
       </span>
 
       <Dropdown
@@ -141,44 +85,47 @@ export const ChatOptionMenu: React.FC<ChatOptionMenuProps> = ({ chat, onReload, 
             {
               key: "api",
               label: (
-                <Tooltip title="Setup this one time so you can start chatting" placement="right">
+                <Tooltip title="" placement="right">
                   <div
-                    onClick={() => {
-                      setOpenChatSettingsModal(true);
+                    style={{ display: "flex", alignItems: "center", width: "auto", whiteSpace: "nowrap" }} // Aligns items in a row with spacing
+                  >
+                    <span style={{ whiteSpace: "nowrap" }}>{userType=== 1 && 'Free Trial'}{userType===2  && 'Premium'}{userType=== 3 && 'Deluxe'}</span>
+                    <Button
+                      type="primary"
+                      onClick={() => {
+                        navigate("/pricing");
+                      }}
+                      block
+                      style={{ whiteSpace: "nowrap", height: "auto" }}
+                    >
+                      {userType=== 1 && 'Upgrade'}{(userType=== 2 ||3) && 'Upgrade Plan'}
+                    </Button>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "center", // Centers the text horizontally
+                      alignItems: "center",      // Centers vertically if needed
+                      width: "100%",             // Makes the div full width
+                      paddingTop: "10px",        // Adds top padding
+                      color: "green",             // Sets text color to blue
                     }}
                   >
-                    <ToolOutlined /> API Settings
+                    Just Enjoy :)
                   </div>
                 </Tooltip>
               ),
             },
             {
-              key: "generation",
+              key: "advance settings",
               label: (
-                <Tooltip title="Generation settings (For advanced users)" placement="right">
+                <Tooltip title="" placement="right">
                   <div
                     onClick={() => {
-                      setOpenGenerationSettingsModal(true);
+                      setOpenAdvancedSettingsModal(true);
                     }}
                   >
-                    <SlidersOutlined /> Generation Settings
-                  </div>
-                </Tooltip>
-              ),
-            },
-            {
-              key: "chat_summary",
-              label: (
-                <Tooltip
-                  title="Generate/Edit a summary of the chat (Only support OpenAI for now)"
-                  placement="right"
-                >
-                  <div
-                    onClick={() => {
-                      setOpenChatSummaryModal(true);
-                    }}
-                  >
-                    <SaveOutlined /> Chat Memory
+                    <SettingOutlined /> Advanced Settings
                   </div>
                 </Tooltip>
               ),
@@ -201,74 +148,6 @@ export const ChatOptionMenu: React.FC<ChatOptionMenuProps> = ({ chat, onReload, 
                 </Tooltip>
               ),
             },
-            {
-              key: "all_chat",
-              label: (
-                <Tooltip title="All your chats with this characters" placement="right">
-                  <div
-                    onClick={() => {
-                      setOpenChatHistoryModal(true);
-                    }}
-                  >
-                    <BookOutlined /> All Chats
-                  </div>
-                </Tooltip>
-              ),
-            },
-
-            {
-              key: "share",
-              label: (
-                <Tooltip
-                  title="Make this chat public (your account name will be hidden) and give you a link for sharing"
-                  placement="right"
-                >
-                  <div
-                    onClick={() => {
-                      if (isSharingChat) {
-                        return;
-                      }
-                      shareChat();
-                    }}
-                  >
-                    {isSharingChat ? <LoadingOutlined /> : <LinkOutlined />} Share Chat
-                  </div>
-                </Tooltip>
-              ),
-            },
-            {
-              key: "immer",
-              label: (
-                <Tooltip
-                  title="Hide message edit/delete to make it more immersive"
-                  placement="right"
-                >
-                  <div style={{ whiteSpace: "pre" }} onClick={(e) => e.stopPropagation()}>
-                    <Switch
-                      className="mr-2"
-                      defaultChecked={config.immersive_mode}
-                      onChange={(checked) => updateConfig({ ...config, immersive_mode: checked })}
-                    />
-                    Immersive mode
-                  </div>
-                </Tooltip>
-              ),
-            },
-            {
-              key: "stream",
-              label: (
-                <Tooltip title="Make text gradually appear (like CAI or ChatGPT)" placement="right">
-                  <div onClick={(e) => e.stopPropagation()}>
-                    <Switch
-                      className="mr-2"
-                      defaultChecked={config.text_streaming}
-                      onChange={(checked) => updateConfig({ ...config, text_streaming: checked })}
-                    />
-                    Text streaming
-                  </div>
-                </Tooltip>
-              ),
-            },
           ],
         }}
       >
@@ -277,33 +156,13 @@ export const ChatOptionMenu: React.FC<ChatOptionMenuProps> = ({ chat, onReload, 
         </Button>
       </Dropdown>
 
-      <ChatHistoryModal
-        open={openChatHistoryModal}
-        character={chat.characters}
-        onModalClose={() => setOpenChatHistoryModal(false)}
-      />
-
-      {/* Hack so modal re-render when openning */}
-      {openChatSettingsModal && (
-        <ChatSettingsModal
-          open={openChatSettingsModal}
-          onModalClose={() => setOpenChatSettingsModal(false)}
-        />
-      )}
-
-      {openChatSummaryModal && (
-        <ChatSummaryModal
+      {openAdvancedSettingsModal && (
+        <AdvancedSettingsModal
+          open={openAdvancedSettingsModal}
+          onModalClose={() => setOpenAdvancedSettingsModal(false)}
+          readyToChat={readyToChat}
           chat={chat}
-          open={openChatSummaryModal}
           onReload={onReload}
-          onModalClose={() => setOpenChatSummaryModal(false)}
-        />
-      )}
-
-      {openGenerationSettingsModal && (
-        <GenerationSettingsModal
-          open={openGenerationSettingsModal}
-          onModalClose={() => setOpenGenerationSettingsModal(false)}
         />
       )}
     </>

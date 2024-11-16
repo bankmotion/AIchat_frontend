@@ -141,7 +141,8 @@ export interface components {
       slug: string;
       created_at: string;
       join_name:string;
-      orderId:number
+      orderId:number;
+      Classification_of_Tag:string;
     };
     CharacterStats: {
       chat: number;
@@ -211,7 +212,9 @@ export interface components {
       config?: Record<string, never>;
       block_list?: components["schemas"]["BlockList"];
       is_nsfw?:boolean,
-      is_blur?:boolean
+      is_blur?:boolean,
+      user_type?:number,
+      admin_api_usage_count?:number
     };
     ProfileResponse: {
       id: string;
@@ -275,6 +278,7 @@ export interface components {
         first_message?: string;
         personality?: string;
         scenario?: string;
+        is_nsfw?:boolean;
       };
     };
     ChatMessageEntity: {
@@ -293,10 +297,12 @@ export interface components {
       message: string;
       is_bot: boolean;
       is_main: boolean;
+      is_mock:boolean;
     };
     UpdateChatMessageDto: {
       message?: string;
       is_main?: boolean;
+      is_mock?:boolean;
     };
     DeleteChatMessageDto: {
       message_ids: (number)[];
@@ -386,6 +392,7 @@ export interface operations {
         sort?: "latest" | "popular";
         special_mode?: "trending" | "newcomer";
         search?: string;
+        is_nsfw?:boolean;
       };
     };
     responses: {

@@ -11,6 +11,7 @@ import { PrivateIndicator } from "./PrivateIndicator";
 import { TagLink } from "./TagLink";
 import { VerifiedMark } from "./shared";
 import { AppContext } from "../../appContext";
+import '../css/ViewCharacter.css';
 
 export interface CharacterCardProps {
   character: CharacterView | CharacterLite;
@@ -46,8 +47,7 @@ export const CharacterCard: React.FC<CharacterCardProps> = ({
   onDelete,
 }) => {
   console.log({ hidden, character });
-  const {localData } = useContext(AppContext);
-
+  const {localData, profile } = useContext(AppContext);
   return (
     <Card
       hoverable
@@ -66,6 +66,7 @@ export const CharacterCard: React.FC<CharacterCardProps> = ({
         <CharacterImage
           alt={character.name}
           src={getBotAvatarUrl(hidden ? BLOCK_BOT_URL : character.avatar)}
+          style={{ filter: (character.is_nsfw && (!profile || profile.is_blur)) ? "blur(25px)" : 'none'}}
         />
       }
       actions={

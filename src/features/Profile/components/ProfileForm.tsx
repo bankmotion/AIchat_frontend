@@ -1,5 +1,5 @@
 import { supabase } from "../../../config";
-import { Input, Button, Upload, Form, App, Radio  } from "antd";
+import { Input, Button, Upload, Form, App, Radio } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -22,8 +22,8 @@ interface FormValues {
   profile: string;
   user_name: string | null;
   is_verified?: boolean;
-  is_nsfw?:boolean;
-  is_blur?:boolean;
+  is_nsfw?: boolean;
+  is_blur?: boolean;
 }
 
 export const ProfileForm = ({ values }: { values: FormValues }) => {
@@ -31,14 +31,14 @@ export const ProfileForm = ({ values }: { values: FormValues }) => {
   const { message } = App.useApp();
   const [form] = Form.useForm<FormValues>();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { profile :Profile, setSession, setProfile } = useContext(AppContext); 
+  const { profile: Profile, setSession, setProfile } = useContext(AppContext);
   const navigate = useNavigate();
 
   const avatarPayloadWatch = Form.useWatch("avatar_payload", form);
 
-  console.log(Profile,"profile")
+  console.log(Profile, "profile")
 
-  const onFinish = async ({ avatar_payload, name, user_name, profile, about_me, is_nsfw,  is_blur }: FormValues) => {
+  const onFinish = async ({ avatar_payload, name, user_name, profile, about_me, is_nsfw, is_blur }: FormValues) => {
     try {
       setIsSubmitting(true);
       const avatarImg = avatar_payload?.file;
@@ -212,8 +212,8 @@ export const ProfileForm = ({ values }: { values: FormValues }) => {
           label="NSFW Toggle"
         >
           <Radio.Group>
-            <Radio value={false}>Show SFW Only</Radio>
-            <Radio value={true}>Show NSFW</Radio>
+            <Radio value={false}>👪 Show SFW Only</Radio>
+            <Radio value={true}>🔥 Show NSFW</Radio>
           </Radio.Group>
         </Form.Item>
 
@@ -222,8 +222,8 @@ export const ProfileForm = ({ values }: { values: FormValues }) => {
           label="Blur Toggle"
         >
           <Radio.Group>
-            <Radio value={true}>Blur NSFW Images</Radio>
-            <Radio value={false}>Unblur NSFW Images</Radio>
+            <Radio value={true}>🙈 Blur NSFW Images</Radio>
+            <Radio value={false}>👁 Unblur NSFW Images</Radio>
           </Radio.Group>
         </Form.Item>
 

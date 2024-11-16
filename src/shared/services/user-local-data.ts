@@ -3,6 +3,8 @@ export interface UserLocalData {
   openAIKey?: string;
 
   character_view?: "sfw" | "nsfw" | "all"; // Newly added
+  is_nsfw?:boolean,
+  is_blur?:boolean,
   reverseProxyKey?: string;
 }
 

@@ -12,6 +12,8 @@ export interface Profile {
   config: Json;
   is_nsfw?:boolean;
   is_blur?:boolean;
+  user_type?:number;
+  admin_api_usage_count?:number;
   // block_list?:Json;
 
   block_list?: BlockList | null;

@@ -91,7 +91,8 @@ export const Login = () => {
               user_name: fetchedProfile.user_name,
               config: fetchedProfile.config,
               is_nsfw:fetchedProfile.is_nsfw,
-              is_blur:fetchedProfile.is_blur
+              is_blur:fetchedProfile.is_blur,
+              user_type:fetchedProfile.user_type
             };
             console.log(validatedProfile.is_blur,validatedProfile.is_nsfw,"validatedProfile")
             setProfile(validatedProfile);

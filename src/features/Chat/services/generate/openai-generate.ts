@@ -79,7 +79,7 @@ class OpenAIGenerate extends GenerateInterface {
     config: UserConfigAndLocalData
   ): AsyncGenerator<string, void, void> {
     const result = await callOpenAI(input.messages!, config);
-
+    console.log(result,"openAiresult")
     if (result.status !== 200) {
       const response = await result.json();
       if ("error" in response) {
@@ -105,6 +105,7 @@ class OpenAIGenerate extends GenerateInterface {
     console.log(result.headers.get("Content-Type"), "result.headers.get(")
     if (!stream) {
       const response = await result.json();
+      console.log(response,"openAIresponse")
       if ("choices" in response) {
         const openAIResponse = response as OpenAIResponse;
         yield openAIResponse.choices[0].message.content;

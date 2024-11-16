@@ -47,6 +47,7 @@ export const SearchCharacter: React.FC = () => {
     sort: "latest",
     tag_id: tagId ? parseInt(tagId, 10) : undefined,
     tag_name: tagName ? tagName : undefined,
+    is_nsfw: profile?.is_nsfw
   });
 
   const updateSearchParams = (params: SearchParams) => {
@@ -85,12 +86,17 @@ export const SearchCharacter: React.FC = () => {
             <Radio.Button value="all">
               <EyeFilled /> All
             </Radio.Button>
-            <Radio.Button value="sfw">
-              <EyeInvisibleFilled /> SFW Only
-            </Radio.Button>
-            <Radio.Button value="nsfw">
-              <HeartFilled /> NSFW Only
-            </Radio.Button>
+            {profile && profile.is_nsfw === true && (
+              <>
+                <Radio.Button value="sfw">
+                  <EyeInvisibleFilled /> SFW Only
+                </Radio.Button>
+                <Radio.Button value="nsfw">
+                  <HeartFilled /> NSFW Only
+                </Radio.Button>
+              </>
+            )
+            }
           </Radio.Group>
         </Form.Item>
         <Form.Item className="mb-xs-py" style={{ flexGrow: 3 }}>
@@ -178,7 +184,19 @@ export const SearchCharacter: React.FC = () => {
         // </TagContainer>
         <TagContainer>
           <Space className="mt-4 " size={[2, 8]} wrap>
-            {tags?.map((tag) => (
+          {profile && profile.is_nsfw === true &&tags && tags.length > 0 &&
+              tags
+                .map((tag) => (
+              <TagLink
+                key={tag.id}
+                tag={tag}
+                isSelected={tag.join_name.toLowerCase() === searchParams.tag_name}
+              />
+            ))}
+            {(!profile || profile.is_nsfw === false) &&tags && tags.length > 0 &&
+              tags
+                .filter((tag) => tag.Classification_of_Tag === "SFW")
+                .map((tag) => (
               <TagLink
                 key={tag.id}
                 tag={tag}

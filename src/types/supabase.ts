@@ -202,6 +202,8 @@ export interface Database {
           user_name: string | null
           is_nsfw:boolean
           is_blur:boolean
+          user_type:number
+          admin_api_usage_count:number
         }
         Insert: {
           about_me?: string
@@ -215,6 +217,8 @@ export interface Database {
           user_name?: string | null
           is_nsfw?:boolean
           is_blur?:boolean
+          user_type?:number
+          admin_api_usage_count?:number
         }
         Update: {
           about_me?: string
@@ -228,6 +232,8 @@ export interface Database {
           user_name?: string | null
           is_nsfw?:boolean
           is_blur?:boolean
+          user_type?:number
+          admin_api_usage_count?:number
         }
       }
       user_reports: {

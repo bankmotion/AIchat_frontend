@@ -24,7 +24,7 @@ export const ChatSummaryModal: React.FC<ChatHistoryModalProps> = ({
 }) => {
   const queryClient = useQueryClient();
   const { message } = App.useApp();
-  const { config, localData } = useContext(AppContext);
+  const { config, localData, profile } = useContext(AppContext);
 
   const [summary, setSummary] = useState(chat.summary || "");
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
@@ -33,7 +33,7 @@ export const ChatSummaryModal: React.FC<ChatHistoryModalProps> = ({
     [config, localData]
   );
 
-  const { data } = useQuery(["chat", chat.id], async () => chatService.getChatById(chat.id), {
+  const { data } = useQuery(["chat", chat.id], async () => chatService.getChatById(chat.id, profile?.id), {
     enabled: Boolean(chat.id),
   });
 

@@ -20,6 +20,7 @@ export interface ChatInputProps {
   shouldFocus: boolean;
   readyToChat: boolean;
   isGenerating: boolean;
+  // endGeneratingMessages:boolean;
   onGenerateChat(inputMessage: string): void;
 }
 
@@ -27,6 +28,7 @@ const ChatInputInternal: React.FC<ChatInputProps> = ({
   shouldFocus,
   readyToChat,
   isGenerating,
+  // endGeneratingMessages,
   onGenerateChat,
 }) => {
   const [inputMessage, setInputMessage] = useState<string>("");

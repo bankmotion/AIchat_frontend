@@ -7,7 +7,8 @@ import { findLast } from "lodash-es";
 import { ChatMessageEntity, SupaChatMessage } from "../../../types/backend-alias";
 import { useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { AppContext } from "../../../appContext";
-import { mockGenerateInstance } from "../services/generate/mock-generate";
+// import { mockGenerateInstance } from "../services/generate/mock-generate";
+import { mockGenerateInstance } from "../services/generate/admin-generate";
 import { openAiGenerateInstance } from "../services/generate/openai-generate";
 import { chatService } from "../services/chat-service";
 import {
@@ -28,6 +29,7 @@ import { ChatInput } from "../components/ChatInput";
 import { Helmet } from "react-helmet";
 import { getBotAvatarUrl } from "../../../shared/services/utils";
 import { characterUrl } from "../../../shared/services/url-utils";
+import { Profile } from "../../../types/profile";
 
 interface ChatState {
   messages: SupaChatMessage[]; // All server-side messages
@@ -99,12 +101,16 @@ export const ChatPage: React.FC = () => {
   console.log(mainMessages, "mainMessages")
   console.log(botChoices, "botChoices")
 
+  console.log(config,"chatPage")
+  console.log(profile,"chatPage")
+
   const isImmersiveMode = Boolean(config?.immersive_mode);
   const readyToChat = chatService.readyToChat(config, localData);
 
   const fullConfig: UserConfigAndLocalData = useMemo(() => {
     return { ...localData, ...config! };
   }, [localData, config]);
+
   const generateInstance: GenerateInterface = useMemo(() => {
     if (fullConfig.api === "openai") {
       profile && openAiGenerateInstance.setProfile(profile);
@@ -113,9 +119,16 @@ export const ChatPage: React.FC = () => {
       profile && koboldGenerateInstance.setProfile(profile);
       return koboldGenerateInstance;
     }
+    else if (fullConfig.api === "openrouter") {
+      profile && mockGenerateInstance.setProfile(profile);
+      return mockGenerateInstance;
+    }
+    profile && mockGenerateInstance.setProfile(profile);
 
     return mockGenerateInstance;
   }, [fullConfig, profile]);
+
+  console.log(fullConfig, "fullConfig", generateInstance, "generateInstance")
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {
@@ -141,9 +154,11 @@ export const ChatPage: React.FC = () => {
     }, 50);
   }, [messageDivRef.current, botChoiceDivRef.current]);
 
+  console.log(profile?.id,"profile?.id")
+
   const { data, refetch, isLoading, error } = useQuery(
-    ["chat", chatId],
-    async () => chatService.getChatById(chatId),
+    ["chat", chatId, profile?.id],
+    async () => chatService.getChatById(chatId, profile?.id),
     {
       enabled: false,
       onSuccess: (chatData) => {
@@ -178,14 +193,14 @@ export const ChatPage: React.FC = () => {
     refreshChats();
   }, [profile]);
 
-  const deleteMessage = async (messageId: number) => {
-    if (messageId < 0) {
+  const deleteMessage = async (messageByCreatedAt: string) => {
+    if (!messageByCreatedAt ) {
       return;
     }
 
     // Delete non-main message too
     const messageToDeletes = chatState.messages.filter(
-      (message) => message.id >= messageId || !message.is_main
+      (message) => new Date(message.created_at) >= new Date(messageByCreatedAt) || !message.is_main
     );
     await chatService.deleteMessages(
       chatId,
@@ -248,6 +263,8 @@ export const ChatPage: React.FC = () => {
       // This method might fail for multiple reasons, allow user to regenerate
       const botMessages = await generateInstance.generate(prompt, fullConfig);
 
+      console.log(botMessages,"botMessages")
+
       if (direction === "right" || direction === "regen") {
         const oldHeight = botChoiceDivRef.current?.getBoundingClientRect().height || 0;
         let streamingText = "";
@@ -281,6 +298,7 @@ export const ChatPage: React.FC = () => {
               message: streamingText,
               is_bot: true,
               is_main: false,
+              is_mock: (config?.api === "mock"),
             })
             .then((botMessage) => {
               dispatch({ type: "new_server_messages", messages: [botMessage] });
@@ -303,125 +321,6 @@ export const ChatPage: React.FC = () => {
       setIsGenerating(false);
     }
   };
-
-  // const generateChat = async (inputMessage: string) => {
-  //   try {
-  //     const canGenerateChat = readyToChat && inputMessage.length > 0 && !isGenerating;
-  //     if (!canGenerateChat) {
-  //       return;
-  //     }
-
-  //     setIsGenerating(true);
-
-  //     const localUserMessage: ChatMessageEntity = {
-  //       id: -2,
-  //       chat_id: 0,
-  //       created_at: "",
-  //       is_bot: false,
-  //       is_main: true,
-  //       message: inputMessage.trimEnd(),
-  //     };
-  //     const localBotMessage: ChatMessageEntity = {
-  //       id: -1,
-  //       chat_id: 0,
-  //       created_at: "",
-  //       is_bot: true,
-  //       is_main: false,
-  //       message: `${data?.chat.characters.name} is replying...`,
-  //     };
-
-  //     // Remove non is_main message
-  //     const choiceToKeep = botChoices[choiceIndex];
-  //     if (choiceToKeep) {
-  //       choiceToKeep.is_main = true;
-
-  //       // No await, but this might failed sometime lol...
-  //       chatService.updateMassage(chatId, choiceToKeep.id, {
-  //         is_main: true,
-  //       });
-  //     }
-  //     const choicesToDelete = botChoices.filter((v, i) => i !== choiceIndex);
-  //     if (choicesToDelete.length > 0) {
-  //       chatService.deleteMessages(
-  //         chatId,
-  //         choicesToDelete.map((message) => message.id)
-  //       );
-  //     }
-
-  //     // Assume deleting always success lol
-  //     dispatch({
-  //       type: "set_messages",
-  //       messages: [...chatState.messages.filter((message) => message.is_main)],
-  //     });
-  //     dispatch({
-  //       type: "new_client_messages",
-  //       messages: [localUserMessage, localBotMessage],
-  //     });
-  //     dispatch({ type: "set_index", newIndex: 0 });
-  //     scrollToBottom();
-
-  //     const insertUserMessagePromise = chatService.createMessage(chatId, localUserMessage);
-  //     insertUserMessagePromise.then().catch((err) => {
-  //       throw err;
-  //     }); // Call this first, get result later, ignore error lol
-
-  //     // Generate prompt back-end to get generated message
-  //     const prompt = generateInstance.buildPrompt(
-  //       inputMessage,
-  //       data?.chat!,
-  //       chatState.messages,
-  //       fullConfig
-  //     );
-
-  //     // This method might fail for multiple reasons, allow user to regenerate
-  //     const generatedTexts = await generateInstance.generate(prompt, fullConfig);
-
-  //     let streamingText = "";
-  //     for await (const text of generatedTexts) {
-  //       streamingText += text;
-  //       localBotMessage.message = streamingText;
-  //       dispatch({
-  //         type: "new_client_messages",
-  //         messages: [localUserMessage, localBotMessage],
-  //       });
-
-  //       scrollToBottom();
-  //     }
-
-  //     // This should have been runned before, now we just await for result
-  //     const serverUserMassage = await insertUserMessagePromise;
-
-  //     // If failed to create bot message, no need to save
-  //     if (streamingText !== "") {
-  //       // const serverBotMassage = await chatService.createMessage(chatId, localBotMessage);
-  //       // No awaiting this, so we can chat faster lol
-  //       chatService
-  //         .createMessage(chatId, localBotMessage)
-  //         .then((serverBotMassage) => {
-  //           dispatch({
-  //             type: "new_server_messages",
-  //             messages: [serverUserMassage, serverBotMassage],
-  //           });
-  //         })
-  //         .catch((err) => {
-  //           throw err;
-  //         });
-  //     } else {
-  //       dispatch({
-  //         type: "new_server_messages",
-  //         messages: [serverUserMassage],
-  //       });
-  //     }
-  //   } catch (err) {
-  //     const error = err as Error;
-  //     message.error(error.message, 3);
-
-  //     // Refetch on error to avoid out of sync
-  //     refreshChats();
-  //   } finally {
-  //     setIsGenerating(false);
-  //   }
-  // };
 
   const generateChat = async (inputMessage: string) => {
     try {
@@ -446,6 +345,7 @@ export const ChatPage: React.FC = () => {
         is_bot: false,
         is_main: true,
         message: inputMessage.trimEnd(),
+        is_mock: (config?.api === "mock"),
       };
       const localBotMessage = {
         id: -1,
@@ -454,7 +354,10 @@ export const ChatPage: React.FC = () => {
         is_bot: true,
         is_main: false,
         message: `${data?.chat.characters.name} is replying...`,
+        is_mock: (config?.api === "mock"),
       };
+
+      console.log(config, "fsdfdsfdfwefw")
 
       console.log("User and bot local messages defined.", { localUserMessage, localBotMessage });
 
@@ -582,6 +485,29 @@ export const ChatPage: React.FC = () => {
     );
   }
 
+
+  //End Generating Message.
+  // const endGeneratingMessages = (mainMessages: any[], profile: Profile | null | undefined): boolean => {
+
+  //   const GenMessagesNumByAdmin = mainMessages.filter((message) => !message.is_bot && message.is_mock).length;
+
+  //   if (profile?.user_type === 1 && GenMessagesNumByAdmin >= 20) {
+  //     return true
+  //   }
+
+  //   else if (profile?.user_type === 2 && GenMessagesNumByAdmin >= 5) {
+  //     return true
+  //   }
+
+  //   else if (profile?.user_type === 3 && GenMessagesNumByAdmin >= 7) {
+  //     return true
+  //   }
+  //   else return false
+  // }
+
+  // Calculate the boolean result before passing it to ChatInput
+  // const shouldEndGenerating = endGeneratingMessages(mainMessages, profile);
+
   return (
     <ChatLayout showControl={canEdit}>
       {isLoading && (
@@ -658,6 +584,7 @@ export const ChatPage: React.FC = () => {
                       onRegenerate={() => swipe("regen")}
                       characterName={data.chat.characters.name}
                       characterAvatar={data.chat.characters.avatar}
+                      characterIsNsfw = {data.chat.characters.is_nsfw}
                       onDelete={deleteMessage}
                       onEdit={async (messageId, newMessage) => {
                         editMessage(item, messageId, newMessage);
@@ -707,6 +634,7 @@ export const ChatPage: React.FC = () => {
                           showRegenerate={false}
                           characterName={data.chat.characters.name}
                           characterAvatar={data.chat.characters.avatar}
+                          characterIsNsfw = {data.chat.characters.is_nsfw}
                           onDelete={deleteMessage}
                           onEdit={(messageId, newMessage) => {
                             editMessage(item, messageId, newMessage);
@@ -727,6 +655,7 @@ export const ChatPage: React.FC = () => {
           shouldFocus={shouldFocus}
           readyToChat={readyToChat}
           isGenerating={isGenerating}
+          // endGeneratingMessages={shouldEndGenerating}
           onGenerateChat={(message) => generateChat(message)}
         />
       )}

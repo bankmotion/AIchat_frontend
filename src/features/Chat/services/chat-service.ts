@@ -1,6 +1,8 @@
 import { axiosInstance, supabase } from "../../../config";
 import { UserConfig } from "../../../shared/services/user-config";
 import { UserLocalData } from "../../../shared/services/user-local-data";
+import {OpenAIInputMessage} from "./types/openai";
+import { UserConfigAndLocalData } from "../../../shared/services/user-config";
 import {
   ChatEntity,
   ChatMessageEntity,
@@ -11,6 +13,7 @@ import {
 } from "../../../types/backend-alias";
 
 type ChatID = number | string | undefined;
+type UserID = number | string | undefined;
 
 const createChat = async (characterId: string, ProfileId:string) => {
   const newChat = await axiosInstance.post<ChatEntity>("chats", {
@@ -41,8 +44,11 @@ const deleteChat = async (chatId: ChatID) => {
   await supabase.from("chats").delete().eq("id", chatId);
 };
 
-const getChatById = async (chatId: ChatID) => {
-  const chatResponse = await axiosInstance.get<ChatResponse>(`/chats/${chatId}`);
+const getChatById = async (chatId: ChatID,userId:UserID) => {
+  console.log(userId,"userId geggweg")
+  const chatResponse = await axiosInstance.get<ChatResponse>(`/chats/${chatId}`,{
+    params: { userId },
+  });
   return chatResponse.data;
 };
 
@@ -56,12 +62,13 @@ const deleteMessages = async (chatId: ChatID, messageIDs: number[]) => {
 
 const createMessage = async (
   chatId: ChatID,
-  { message, is_bot, is_main }: CreateChatMessageDto
+  { message, is_bot, is_main, is_mock }: CreateChatMessageDto
 ) => {
   const messageResponse = await axiosInstance.post<ChatMessageEntity>(`/chats/${chatId}/messages`, {
     message,
     is_bot,
     is_main,
+    is_mock
   });
   return messageResponse.data;
 };
@@ -82,11 +89,16 @@ const updateMassage = async (
 };
 
 const readyToChat = (config: UserConfig | undefined, localData: UserLocalData) => {
+  console.log(config,localData,"readyToChat")
   if (!config) {
     return false;
   }
 
   if (config.api === "mock") {
+    return true;
+  }
+
+  if (config.api === "openrouter") {
     return true;
   }
 
@@ -118,6 +130,22 @@ export const formatChat = (inputMessage: string, user = "Anon", characterName = 
     .replace(/<START>/gi, "");
 };
 
+export const generateMessageByAdmin = async (
+  messages: OpenAIInputMessage[],
+  config: UserConfigAndLocalData,
+  user_id:string
+) => {
+  const Response = await axiosInstance.post(
+    `/chats/messages/generateByAdmin`,
+    {
+      messages: messages,
+      config:config,
+      user_id:user_id
+    }
+  );
+  return Response;
+};
+
 export const chatService = {
   createChat,
   deleteChat,
@@ -128,4 +156,5 @@ export const chatService = {
   deleteMessages,
   readyToChat,
   formatChat,
+  generateMessageByAdmin,
 };

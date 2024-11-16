@@ -7,9 +7,15 @@ export interface GenerationSetting {
   repetition_penalty?: number;
 }
 
+export const OPENROUTER_DEFAULT_GENERATION_SETTINGS: GenerationSetting = {
+  temperature: 1,
+  max_new_token: 300,
+  context_length: 4096,
+};
+
 export const OPEN_AI_DEFAULT_GENERATION_SETTINGS: GenerationSetting = {
   temperature: 1,
-  max_new_token: 100,
+  max_new_token: 300,
   context_length: 4096,
 };
 

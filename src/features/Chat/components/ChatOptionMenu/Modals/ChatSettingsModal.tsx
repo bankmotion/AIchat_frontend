@@ -9,11 +9,13 @@ import {
 } from "../../../../../shared/services/generation-setting";
 import {
   OPEN_AI_DEFAULT_CONFIG,
+  updateUserConfig,
   UserConfig,
   UserConfigAndLocalData,
 } from "../../../../../shared/services/user-config";
-import { UserLocalData } from "../../../../../shared/services/user-local-data";
+import { saveLocalData, UserLocalData } from "../../../../../shared/services/user-local-data";
 import { CheckInput, checkKoboldURL, checkOpenAIKeyOrProxy } from "../../../services/check-service";
+import { supabase } from "../../../../../config";
 
 const { Title } = Typography;
 
@@ -39,7 +41,7 @@ const PROMPT_TEMPLATES = {
 };
 
 export const ChatSettingsModal: React.FC<ChatSettingsModalProps> = ({ open, onModalClose }) => {
-  const { localData, updateLocalData, config, updateConfig } = useContext(AppContext);
+  const { localData, updateLocalData, config, updateConfig, profile } = useContext(AppContext);
   const [isCheckingOpenAI, setIsCheckingOpenAI] = useState(false);
   const [isCheckingKobol, setIsCheckingKobol] = useState(false);
   const [koboldModel, setKoboldModel] = useState("");
@@ -84,6 +86,14 @@ export const ChatSettingsModal: React.FC<ChatSettingsModalProps> = ({ open, onMo
     };
     updateLocalData(newLocalData);
 
+    const completeLocalData: UserLocalData = {
+      ...newLocalData,
+      theme: newLocalData.theme ?? "light", // Default to "light" if undefined
+      // Assign default values to other required properties if necessary
+    };
+
+    saveLocalData(completeLocalData)
+
     const newConfig: Partial<UserConfig> = {
       ...config,
 
@@ -93,7 +103,7 @@ export const ChatSettingsModal: React.FC<ChatSettingsModalProps> = ({ open, onMo
       open_ai_mode: formValues.open_ai_mode,
       open_ai_reverse_proxy: formValues.open_ai_reverse_proxy,
       jailbreak_prompt: formValues.jailbreak_prompt,
-
+      openrouter_model:formValues.openrouter_model,
       api_url: formValues.api_url || config.api_url,
     };
     if (shouldUpdateGenerationSetting) {
@@ -104,7 +114,7 @@ export const ChatSettingsModal: React.FC<ChatSettingsModalProps> = ({ open, onMo
       }
     }
     updateConfig(newConfig);
-
+    if (profile) { updateUserConfig(newConfig, profile.id) }
     onModalClose();
   };
 
@@ -209,11 +219,24 @@ export const ChatSettingsModal: React.FC<ChatSettingsModalProps> = ({ open, onMo
               {location.hostname === "localhost" && (
                 <Radio.Button value="mock">Mock API for testing</Radio.Button>
               )}
+              <Radio.Button value="openrouter">Members API</Radio.Button>
               <Radio.Button value="openai">Open AI</Radio.Button>
               <Radio.Button value="kobold">Kobold AI</Radio.Button>
               {/* <Radio.Button value="ooba">Oobabooga</Radio.Button> */}
             </Radio.Group>
           </Form.Item>
+          {apiWatch === "openrouter" && (
+            <>
+              <Title level={5}>OpenRouter Settings</Title>
+              <Form.Item name="openrouter_model" label="OpenRouter Model">
+                <Select defaultValue="gryphe/mythomax-l2-13b">
+                  <Select.Option value="gryphe/mythomax-l2-13b">Gryphe Mythomax L2 13B</Select.Option>
+                  <Select.Option value="mistralai/mistral-nemo">Mistral Nemo</Select.Option>
+                  <Select.Option value="microsoft/wizardlm-2-7b">Microsoft WizardLM 2 7B</Select.Option>
+                </Select>
+              </Form.Item>
+            </>
+          )}
 
           {apiWatch === "openai" && (
             <>

@@ -9,6 +9,8 @@ import { PrivateIndicator } from "./PrivateIndicator";
 import { ChatEntityWithCharacter } from "../../types/backend-alias";
 import { chatService, formatChat } from "../../features/Chat/services/chat-service";
 import { characterUrl } from "../services/url-utils";
+import { useContext } from "react";
+import { AppContext } from "../../appContext";
 
 interface ChatListProps {
   chats: ChatEntityWithCharacter[];
@@ -59,6 +61,8 @@ export const ChatList: React.FC<ChatListProps> = ({
     onChatDeleted?.();
   };
 
+  const { profile } = useContext(AppContext)
+
   return (
     <ChatListContainer size={size}>
       {chats.map((chat) => (
@@ -95,7 +99,8 @@ export const ChatList: React.FC<ChatListProps> = ({
           ].filter((a) => a)}
         >
           <Card.Meta
-            avatar={<BotAvatar alt="" src={getBotAvatarUrl(chat.characters?.avatar || "")} />}
+            avatar={<BotAvatar alt="" src={getBotAvatarUrl(chat.characters?.avatar || "")}
+              style={{ filter: (chat.characters?.is_nsfw && (!profile || profile.is_blur)) ? "blur(25px)" : 'none' }} />}
             title={
               <Link
                 to={
@@ -135,7 +140,7 @@ export const ChatList: React.FC<ChatListProps> = ({
                   </p>
                 )}
                 <p>
-                  { chat.updated_at && <><ClockCircleOutlined /> {getTimeAgo(chat.updated_at)} ago </>}
+                  {chat.updated_at && <><ClockCircleOutlined /> {getTimeAgo(chat.updated_at)} ago </>}
                 </p>
               </div>
             }

@@ -19,6 +19,7 @@ import { useTags } from "../../../hooks/useTags";
 import { TagLink } from "../../../shared/components/TagLink";
 import { IPAD_BREAKPOINT_CSS } from "../../../css-const";
 import { getPage } from "../../../shared/services/utils";
+import '../../../shared/css/ViewCharacter.css'
 
 const { Title } = Typography;
 
@@ -81,47 +82,54 @@ export const Home: React.FC = () => {
   const params: SearchParams | undefined = useMemo(() => {
     const modeParams = { mode: localData.character_view || "sfw" };
 
+    let is_nsfwParams = {};
+
+    if (profile && profile.is_nsfw === true) {
+      is_nsfwParams = { is_nsfw: true };
+    }
+    else is_nsfwParams = { is_nsfw: false }
+
     switch (segment) {
       case "latest":
-        return modeParams;
+        return { ...modeParams, ...is_nsfwParams };
       case "trending":
-        return { special_mode: segment, ...modeParams };
+        return { special_mode: segment, ...modeParams, ...is_nsfwParams };
       case "newcomer":
-        return { special_mode: segment, ...modeParams };
+        return { special_mode: segment, ...modeParams, ...is_nsfwParams };
       case "popular":
-        return { sort: "popular", ...modeParams };
+        return { sort: "popular", ...modeParams, ...is_nsfwParams };
       // Lol hard code for now
       case "female":
-        return { tag_name: "Female", ...modeParams };
+        return { tag_name: "Female", ...modeParams, ...is_nsfwParams };
       case "male":
-        return { tag_name: "Male", ...modeParams };
+        return { tag_name: "Male", ...modeParams, ...is_nsfwParams };
       case "anime":
-        return { tag_name: "Anime", ...modeParams };
+        return { tag_name: "Anime", ...modeParams, ...is_nsfwParams };
       case "game":
-        return { tag_name: "Game", ...modeParams };
+        return { tag_name: "Game", ...modeParams, ...is_nsfwParams };
     }
   }, [segment, localData]);
 
   const { data: chatData, isLoading: isChatLoading } = useQuery(
     ["chats", profile?.id],
     async () => {
-      if(profile?.id){
-      const responses = await supabase
-        .from("chats")
-        .select(
-          "id, is_public, summary, updated_at, character_id, characters(name, description, avatar)"
-        )
-        .order("updated_at", { ascending: false })
-        .order("created_at", { ascending: false })
-        .eq("user_id", profile?.id)
-        .limit(4)
-        .returns<ChatEntityWithCharacter[]>();
-        
+      if (profile?.id) {
+        const responses = await supabase
+          .from("chats")
+          .select(
+            "id, is_public, summary, updated_at, character_id, characters(name, description, avatar, is_nsfw)"
+          )
+          .order("updated_at", { ascending: false })
+          .order("created_at", { ascending: false })
+          .eq("user_id", profile?.id)
+          .limit(4)
+          .returns<ChatEntityWithCharacter[]>();
 
-        console.log(responses,"responses")
 
-      const chats = responses.data;
-      return chats;
+        console.log(responses, "responses")
+
+        const chats = responses.data;
+        return chats;
       }
     },
     { enabled: !!profile }
@@ -153,7 +161,7 @@ export const Home: React.FC = () => {
         <link rel="canonical" href="https://venusai.chat" />
       </Helmet>
 
-      {/* {profile && (
+      {profile && (
         <div>
           {isChatLoading && <Spin />}
           {chatData && chatData.length > 0 && (
@@ -166,7 +174,7 @@ export const Home: React.FC = () => {
             </div>
           )}
         </div>
-      )} */}
+      )}
 
       <Radio.Group
         className="mb-4"
@@ -176,12 +184,17 @@ export const Home: React.FC = () => {
         <Radio.Button value="all">
           <EyeFilled /> All
         </Radio.Button>
-        <Radio.Button value="sfw">
-          <EyeInvisibleFilled /> SFW Only
-        </Radio.Button>
-        <Radio.Button value="nsfw">
-          <HeartFilled /> NSFW Only
-        </Radio.Button>
+        {profile && profile.is_nsfw === true && (
+          <>
+            <Radio.Button value="sfw">
+              <EyeInvisibleFilled /> SFW Only
+            </Radio.Button>
+            <Radio.Button value="nsfw">
+              <HeartFilled /> NSFW Only
+            </Radio.Button>
+          </>
+        )
+        }
       </Radio.Group>
 
       <SegmentContainer>
@@ -234,9 +247,17 @@ export const Home: React.FC = () => {
       {segment === "tags" ? (
         <TagContainer>
           <Space className="mt-4 " size={[2, 8]} wrap>
-            {tags?.map((tag) => (
-              <TagLink tag={tag} />
-            ))}
+            {profile && profile.is_nsfw === true &&tags && tags.length > 0 &&
+              tags
+                .map((tag) => (
+                  <TagLink key={tag.id} tag={tag} />
+                ))}
+             {(!profile || profile.is_nsfw === false) &&tags && tags.length > 0 &&
+              tags
+                .filter((tag) => tag.Classification_of_Tag === "SFW")
+                .map((tag) => (
+                  <TagLink key={tag.id} tag={tag} />
+                ))}
           </Space>
         </TagContainer>
       ) : (

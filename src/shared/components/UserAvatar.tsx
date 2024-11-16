@@ -1,5 +1,6 @@
 import {
   CloseCircleOutlined,
+  DollarCircleFilled,
   HomeFilled,
   TeamOutlined,
   UserAddOutlined,
@@ -24,7 +25,9 @@ export const UserAvatar: React.FC = () => {
     setSession(null);
     setProfile(null);
 
-    navigate("/");
+    // navigate("/");
+    location.href = "/";
+
   }, []);
 
   return (
@@ -32,6 +35,18 @@ export const UserAvatar: React.FC = () => {
       <Dropdown
         menu={{
           items: [
+            {
+              key: "my_account",
+              icon: <UserOutlined />,
+              label: "Account",
+              onClick: () => navigate("/account"),
+            },
+            {
+              key: "my_pricingPage",
+              icon: <DollarCircleFilled />,
+              label: "Pricing",
+              onClick: () => navigate("/pricing"),
+            },
             {
               key: "my_profile",
               icon: <HomeFilled />,

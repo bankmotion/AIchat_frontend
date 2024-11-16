@@ -10,8 +10,9 @@ import {
 import { MultiLineMarkdown } from "../../../shared/components/MultiLineMarkdown";
 import { getAvatarUrl, getBotAvatarUrl } from "../../../shared/services/utils";
 import { SupaChatMessage } from "../../../types/backend-alias";
-import { useRef, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import { formatChat } from "../services/chat-service";
+import { AppContext } from "../../../appContext";
 
 interface MessageDisplayProps {
   message: SupaChatMessage;
@@ -20,8 +21,9 @@ interface MessageDisplayProps {
 
   characterAvatar?: string;
   userAvatar?: string;
+  characterIsNsfw?:boolean;
   onEdit?: (messageId: number, newMessage: string) => void;
-  onDelete?: (messageId: number) => void;
+  onDelete?: (messageByCreatedAt: string) => void;
 
   onRegenerate?: (messageId: number) => void;
   canEdit: boolean;
@@ -42,6 +44,7 @@ export const MessageDisplay: React.FC<MessageDisplayProps> = ({
   characterName,
   characterAvatar,
   userAvatar,
+  characterIsNsfw,
   onEdit,
   onDelete,
   canEdit,
@@ -51,6 +54,8 @@ export const MessageDisplay: React.FC<MessageDisplayProps> = ({
   const inputRef = useRef<InputRef>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editMessage, setEditMessage] = useState(message.message);
+  const {profile} = useContext(AppContext);
+  console.log(characterIsNsfw,"is_nsfw", profile?.is_blur,"profile.is_blur")
 
   return (
     <List.Item
@@ -103,7 +108,7 @@ export const MessageDisplay: React.FC<MessageDisplayProps> = ({
                   <Popconfirm
                     title="Delete chat"
                     description="This will delete all messages after this too?"
-                    onConfirm={() => onDelete?.(message.id)}
+                    onConfirm={() => onDelete?.(message.created_at)}
                     okText="Yes"
                     cancelText="No"
                   >
@@ -138,7 +143,7 @@ export const MessageDisplay: React.FC<MessageDisplayProps> = ({
         avatar={
           <Image
             width={55}
-            style={{ borderRadius: "0.5rem" }}
+            style={{ borderRadius: "0.5rem", filter: (message.is_bot && characterIsNsfw && (!profile || profile.is_blur)) ? "blur(25px)" : 'none'}}
             src={message.is_bot ? getBotAvatarUrl(characterAvatar) : getAvatarUrl(userAvatar)}
             fallback="https://cvochnalpmpanziphini.supabase.co/storage/v1/object/public/bot-avatars/anon.jpg"
           />

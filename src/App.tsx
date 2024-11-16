@@ -14,6 +14,7 @@ import { getLocalData, UserLocalData, saveLocalData } from "./shared/services/us
 import { getUserConfig, updateUserConfig, UserConfig } from "./shared/services/user-config";
 import { MainLayout } from "./shared/MainLayout";
 import { profileService } from "./features/Profile/services/profile-service";
+import { ProtectedRoute } from "./shared/components/Protectroute";
 
 const Home = loadable(() => import("./features/Home/pages/Home"), {
   resolveComponent: (component) => component.Home,
@@ -88,6 +89,114 @@ const FAQ = loadable(() => import("./features/ToC"), {
   fallback: <Spin />,
 });
 
+const Pricing = loadable(() => import("./features/ToC"), {
+  resolveComponent: (component) => component.Pricing,
+  fallback: <Spin />,
+});
+
+const Account = loadable(() => import("./features/ToC"), {
+  resolveComponent: (component) => component.Account,
+  fallback: <Spin />,
+});
+
+// const router = createBrowserRouter([
+//   {
+//     path: "/",
+//     element: <MainLayout />,
+//     children: [
+//       {
+//         path: "/",
+//         element: <Home />,
+//       },
+//       {
+//         path: "/register",
+//         element: <Register />,
+//       },
+//       {
+//         path: "/login",
+//         element: <Login />,
+//       },
+//       {
+//         path: "/reset_password",
+//         element: <ResetPassword />,
+//       },
+
+//       // Profile and Public Profile
+//       {
+//         path: "/profile",
+//         element: <ProfilePage />,
+//       },
+//       {
+//         path: "/profiles/:profileId",
+//         element: <PublicProfile />,
+//       },
+//       {
+//         path: "/blocks",
+//         element: <Blocks />,
+//       },
+
+//       // Characters
+//       {
+//         path: "/search",
+//         element: <SearchCharacter />,
+//       },
+//       {
+//         path: "/tags/:tagName",
+//         element: <SearchCharacter />,
+//       },
+//       {
+//         path: "/create_character",
+//         element: <CreateCharacter />,
+//       },
+//       {
+//         path: "/edit_character/:characterId",
+//         element: <EditCharacter />,
+//       },
+//       {
+//         path: "/my_characters",
+//         element: <MyCharacters />,
+//       },
+//       {
+//         path: "/characters/:characterId",
+//         element: <ViewCharacter />,
+//       },
+
+//       // Chat related
+//       {
+//         path: "/my_chats",
+//         element: <MyChats />,
+//       },
+
+//       // Toc
+//       {
+//         path: "/term",
+//         element: <TermOfUse />,
+//       },
+//       {
+//         path: "/policy",
+//         element: <PrivatePolicy />,
+//       },
+//       {
+//         path: "/faq",
+//         element: <FAQ />,
+//       },
+//       {
+//         path: "/Pricing",
+//         element: <Pricing />,
+//       },
+
+//       {
+//         path: "/account",
+//         element: <Account />,
+//       },
+//     ],
+//   },
+//   {
+//     path: "/chats/:chatId",
+//     element: <ChatPage />,
+//   },
+// ]);
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -110,10 +219,10 @@ const router = createBrowserRouter([
         element: <ResetPassword />,
       },
 
-      // Profile and Public Profile
+      // Protected Profile Routes
       {
         path: "/profile",
-        element: <ProfilePage />,
+        element:<ProfilePage />,
       },
       {
         path: "/profiles/:profileId",
@@ -121,10 +230,10 @@ const router = createBrowserRouter([
       },
       {
         path: "/blocks",
-        element: <Blocks />,
+        element: <ProtectedRoute><Blocks /></ProtectedRoute>,
       },
 
-      // Characters
+      // Characters - Protected and Public Routes
       {
         path: "/search",
         element: <SearchCharacter />,
@@ -135,28 +244,28 @@ const router = createBrowserRouter([
       },
       {
         path: "/create_character",
-        element: <CreateCharacter />,
+        element: <ProtectedRoute><CreateCharacter /></ProtectedRoute>,
       },
       {
         path: "/edit_character/:characterId",
-        element: <EditCharacter />,
+        element: <ProtectedRoute><EditCharacter /></ProtectedRoute>,
       },
       {
         path: "/my_characters",
-        element: <MyCharacters />,
+        element: <ProtectedRoute><MyCharacters /></ProtectedRoute>,
       },
       {
         path: "/characters/:characterId",
         element: <ViewCharacter />,
       },
 
-      // Chat related
+      // Protected Chat Routes - only protect my_chats
       {
         path: "/my_chats",
         element: <MyChats />,
       },
 
-      // Toc
+      // Public ToC Routes
       {
         path: "/term",
         element: <TermOfUse />,
@@ -169,8 +278,17 @@ const router = createBrowserRouter([
         path: "/faq",
         element: <FAQ />,
       },
+      {
+        path: "/pricing",
+        element: <ProtectedRoute><Pricing /></ProtectedRoute>,
+      },
+      {
+        path: "/account",
+        element: <ProtectedRoute><Account /></ProtectedRoute>,
+      },
     ],
   },
+  // Chat page is public
   {
     path: "/chats/:chatId",
     element: <ChatPage />,
@@ -203,6 +321,8 @@ const App: React.FC = () => {
         }
 
         if (!isEqual(oldConfig, newConfig) && profile) {
+
+          console.log(oldConfig, "old", newConfig, "new")
           return updateUserConfig(newConfig, profile.id);
         }
 
@@ -228,11 +348,11 @@ const App: React.FC = () => {
           is_verified: false,
           config: {}, // Default configuration
         };
-        console.log("1")
+
         const { data, error: profileInsertError } = await supabase
           .from("user_profiles")
           .insert([profileData]);
-        console.log("2")
+
         // Retrieve the newly created profile
         const { data: profileDataFetched, error: profileFetchError } = await supabase
           .from("user_profiles")
@@ -243,10 +363,10 @@ const App: React.FC = () => {
           console.error("Error fetching profile:", profileFetchError);
           return;
         }
-        console.log("3")
+
         if (profileDataFetched && profileDataFetched.length > 0) {
           const fetchedProfile = profileDataFetched[0];
-          console.log("4")
+
           // Type guard to check if block_list is in the expected format
           const isValidBlockList = (blockList: any): blockList is Profile["block_list"] => {
             return (
@@ -276,17 +396,16 @@ const App: React.FC = () => {
             profile: fetchedProfile.profile,
             user_name: fetchedProfile.user_name,
             config: fetchedProfile.config,
-            is_nsfw:fetchedProfile.is_nsfw,
-            is_blur:fetchedProfile.is_blur
+            is_nsfw: fetchedProfile.is_nsfw,
+            is_blur: fetchedProfile.is_blur,
+            user_type: fetchedProfile.user_type,
+            admin_api_usage_count: fetchedProfile.admin_api_usage_count,
           };
-          console.log("5")
+
           // Update the profile state
           setProfile(validatedProfile);
-          console.log(validatedProfile.config,"validatedProfile.config")
           updateConfig(getUserConfig(validatedProfile.config));
-          console.log("6")
-          // Show success message and navigate
-          // message.success("Account created successfully. Please set your username.");
+          console.log(getUserConfig(JSON.stringify(validatedProfile.config)));
         }
         else {
           console.error("Profile data is null or empty");
@@ -346,8 +465,6 @@ const App: React.FC = () => {
         theme={{
           algorithm: [
             theme.darkAlgorithm,
-            // localData.theme === "light" ? theme.defaultAlgorithm : theme.darkAlgorithm,
-            // theme.compactAlgorithm,
           ],
           token: {
             fontSize: 16,

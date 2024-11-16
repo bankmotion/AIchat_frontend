@@ -38,6 +38,7 @@ import { Tokenizer } from "../services/character-parse/tokenizer";
 import { AppContext } from "../../../appContext";
 import { PrivateIndicator } from "../../../shared/components/PrivateIndicator";
 import { chatService } from "../../Chat/services/chat-service";
+import '../../../shared/css/ViewCharacter.css'
 
 import {
   ChatList,
@@ -46,8 +47,9 @@ import {
   PageContainer,
   VerifiedMark,
   MultiLineMarkdown,
+  CharacterList,
 } from "../../../shared/components";
-import { exportCharacter, getCharacter, getCharacterReviews } from "../services/character-service";
+import { exportCharacter, getCharacter, getCharacterReviews,getSimilarCharacters } from "../services/character-service";
 import { Character } from "../services/character-parse/character";
 import { Dislike, Like, ReviewPanel } from "../components/ReviewPanel";
 import { characterUrl, profileUrl } from "../../../shared/services/url-utils";
@@ -87,6 +89,27 @@ export const ViewCharacter: React.FC = () => {
       },
     }
   );
+
+  
+  const { data: similarCharacters } = useQuery(
+    ["view_similarCharacters", characterId],
+    async () => {
+      console.log(profile?.is_nsfw,"profile?.is_nsfw")
+      const similarCharacters = await getSimilarCharacters(characterId!, profile?.is_nsfw);
+      return similarCharacters;
+    },
+    {
+      enabled: !!characterId,
+      retry: 1,
+      onSuccess(data) {
+        if (data) {
+          setPrerenderReady();
+        }
+      },
+    }
+  );
+
+  console.log(similarCharacters,"similarCharacters")
 
   const { data: reviews, refetch: refetchReviews } = useQuery(
     ["view_character_reviews", characterId],
@@ -143,7 +166,7 @@ export const ViewCharacter: React.FC = () => {
       const existingChat = await supabase
         .from("chats")
         .select("id")
-        .match({ character_id: characterId,user_id:profile.id })
+        .match({ character_id: characterId, user_id: profile.id })
         .order("created_at", { ascending: false })
         .maybeSingle();
 
@@ -252,7 +275,13 @@ export const ViewCharacter: React.FC = () => {
                 )
               }
             >
-              <Image src={getBotAvatarUrl(character.avatar)} />
+              {character.is_nsfw ? <Image
+                src={getBotAvatarUrl(character.avatar)}
+                className={!profile || profile.is_blur ? "blurred-image" : ""} // Apply "blurred-image" if profile is missing or is_blur is true, otherwise set empty class
+                preview={!!profile && !profile.is_blur} // Enable preview only if profile exists and is_blur is false
+                style={{ pointerEvents: 'none' }}
+              /> : <Image
+                src={getBotAvatarUrl(character.avatar)} />}
             </Badge.Ribbon>
 
             <div className="mt-2">
@@ -264,15 +293,7 @@ export const ViewCharacter: React.FC = () => {
               </Link>
               <MultiLineMarkdown>{character.description}</MultiLineMarkdown>
             </div>
-
-            {/* {character.is_nsfw || character.tags?.length ? (
-              <Space size={[0, 8]} wrap>
-                {character.is_nsfw ? <Tag color="error">🔞 NSFW</Tag> : ""}
-                {character.tags?.map((tag) => (
-                  <TagLink tag={tag} />
-                ))}
-              </Space>
-            ) : null} */}
+            
             <Space size={[0, 8]} wrap>
               {character.is_nsfw ? <Tag color="error">🔞 NSFW</Tag> : ""}
               {"character_tags" in character && character.character_tags?.slice(0, 4).map((tag) => <TagLink tag={tag.tags} />)}
@@ -389,9 +410,9 @@ export const ViewCharacter: React.FC = () => {
                 />
               </Collapse.Panel>
 
-              <Collapse.Panel header={`${chatData?.length || 0} shared public chats`} key="chats">
+              {/* <Collapse.Panel header={`${chatData?.length || 0} shared public chats`} key="chats">
                 {chatData && <ChatList chats={chatData} size="small" mode="view" />}
-              </Collapse.Panel>
+              </Collapse.Panel> */}
             </Collapse>
 
             <div className="mt-4 text-right">
@@ -442,6 +463,12 @@ export const ViewCharacter: React.FC = () => {
                   )}
                 </div>
               )}
+            </div>
+
+            <div>
+              <div className="mt-8 text-left"><h1>Similar Characters</h1></div>
+              <CharacterList size="small" characters={similarCharacters ??[]} />
+
             </div>
           </Col>
         </Row>

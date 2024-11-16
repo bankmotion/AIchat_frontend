@@ -58,7 +58,9 @@ export const Register = () => {
             is_verified: false,
             config: {}, // Default configuration
             is_nsfw:false,
-            is_blur:true
+            is_blur:true,
+            user_type:1,
+            admin_api_usage_count:0,
             // Add any other profile fields needed
           };
 
@@ -113,7 +115,9 @@ export const Register = () => {
                 user_name: fetchedProfile.user_name,
                 config: fetchedProfile.config,
                 is_nsfw: fetchedProfile.is_nsfw,
-                is_blur:fetchedProfile.is_blur
+                is_blur:fetchedProfile.is_blur,
+                user_type:fetchedProfile.user_type,
+                admin_api_usage_count:fetchedProfile.admin_api_usage_count
               };
               setProfile(validatedProfile);
             }
@@ -166,7 +170,9 @@ export const Register = () => {
         is_verified: false,
         config: {}, // Default configuration
         is_nsfw:false,
-        is_blur:true
+        is_blur:true,
+        user_type:1,
+        admin_api_usage_count:0
       };
 
       const { data, error: profileInsertError } = await supabase
@@ -225,7 +231,9 @@ export const Register = () => {
           user_name: fetchedProfile.user_name,
           config: fetchedProfile.config,
           is_nsfw:fetchedProfile.is_nsfw,
-          is_blur:fetchedProfile.is_blur
+          is_blur:fetchedProfile.is_blur,
+          user_type:fetchedProfile.user_type,
+          admin_api_usage_count:fetchedProfile.admin_api_usage_count
         };
 
         // Update the profile state
