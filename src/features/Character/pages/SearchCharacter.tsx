@@ -47,7 +47,8 @@ export const SearchCharacter: React.FC = () => {
     sort: "latest",
     tag_id: tagId ? parseInt(tagId, 10) : undefined,
     tag_name: tagName ? tagName : undefined,
-    is_nsfw: profile?.is_nsfw
+    is_nsfw: profile?.is_nsfw,
+    user_id:profile?.id
   });
 
   const updateSearchParams = (params: SearchParams) => {

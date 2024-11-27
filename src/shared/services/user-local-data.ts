@@ -6,6 +6,7 @@ export interface UserLocalData {
   is_nsfw?:boolean,
   is_blur?:boolean,
   reverseProxyKey?: string;
+  is_signIn?:boolean;
 }
 
 const LOCAL_DATA_KEY = "local-data";

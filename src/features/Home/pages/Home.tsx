@@ -1,9 +1,9 @@
 import { useQuery } from "react-query";
 import styled from "styled-components";
-import { Typography, Spin, Segmented, Radio, Space } from "antd";
+import { Typography, Spin, Segmented, Radio, Space, Modal, Button, message } from "antd";
 
 import { PageContainer } from "../../../shared/components/shared";
-import { supabase } from "../../../config";
+import { axiosInstance, supabase } from "../../../config";
 import { ChatEntityWithCharacter } from "../../../types/backend-alias";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { AppContext } from "../../../appContext";
@@ -13,7 +13,7 @@ import {
   CharacterListWrapper,
   SearchParams,
 } from "../../../shared/components/CharacterListWrapper";
-import { EyeFilled, EyeInvisibleFilled, HeartFilled } from "@ant-design/icons";
+import { ExclamationCircleOutlined, EyeFilled, EyeInvisibleFilled, HeartFilled } from "@ant-design/icons";
 import { Helmet } from "react-helmet";
 import { useTags } from "../../../hooks/useTags";
 import { TagLink } from "../../../shared/components/TagLink";
@@ -22,6 +22,12 @@ import { getPage } from "../../../shared/services/utils";
 import '../../../shared/css/ViewCharacter.css'
 
 const { Title } = Typography;
+
+interface ReactivationModalProps {
+  visible: boolean; // Boolean to control modal visibility
+  onClose: () => void; // Function to handle modal close action
+  onReactivate: () => Promise<void>; // Function to handle reactivation
+}
 
 type Segment =
   | "latest"
@@ -59,7 +65,7 @@ const TagContainer = styled.div`
 `;
 
 export const Home: React.FC = () => {
-  const { profile, localData, updateLocalData } = useContext(AppContext);
+  const { profile, localData, updateLocalData, isActivateModalVisible, setIsActivateModalVisible, loginUserEmail } = useContext(AppContext);
   const tags = useTags();
 
   const [searchParams, setSearchParams] = useSearchParams({
@@ -81,6 +87,7 @@ export const Home: React.FC = () => {
 
   const params: SearchParams | undefined = useMemo(() => {
     const modeParams = { mode: localData.character_view || "sfw" };
+    const userParams = { user_id: profile?.id };
 
     let is_nsfwParams = {};
 
@@ -91,22 +98,22 @@ export const Home: React.FC = () => {
 
     switch (segment) {
       case "latest":
-        return { ...modeParams, ...is_nsfwParams };
+        return { ...modeParams, ...is_nsfwParams, ...userParams };
       case "trending":
-        return { special_mode: segment, ...modeParams, ...is_nsfwParams };
+        return { special_mode: segment, ...modeParams, ...is_nsfwParams, ...userParams };
       case "newcomer":
-        return { special_mode: segment, ...modeParams, ...is_nsfwParams };
+        return { special_mode: segment, ...modeParams, ...is_nsfwParams, ...userParams };
       case "popular":
-        return { sort: "popular", ...modeParams, ...is_nsfwParams };
+        return { sort: "popular", ...modeParams, ...is_nsfwParams, ...userParams };
       // Lol hard code for now
       case "female":
-        return { tag_name: "Female", ...modeParams, ...is_nsfwParams };
+        return { tag_name: "Female", ...modeParams, ...is_nsfwParams, ...userParams };
       case "male":
-        return { tag_name: "Male", ...modeParams, ...is_nsfwParams };
+        return { tag_name: "Male", ...modeParams, ...is_nsfwParams, ...userParams };
       case "anime":
-        return { tag_name: "Anime", ...modeParams, ...is_nsfwParams };
+        return { tag_name: "Anime", ...modeParams, ...is_nsfwParams, ...userParams };
       case "game":
-        return { tag_name: "Game", ...modeParams, ...is_nsfwParams };
+        return { tag_name: "Game", ...modeParams, ...is_nsfwParams, ...userParams };
     }
   }, [segment, localData]);
 
@@ -134,6 +141,54 @@ export const Home: React.FC = () => {
     },
     { enabled: !!profile }
   );
+
+  const ReactivationModal: React.FC<ReactivationModalProps> = ({ visible, onClose, onReactivate }) => (
+    <Modal
+      title={
+        <Space>
+          {/* <ExclamationCircleOutlined style={{ color: "#faad14", fontSize: "24px" }} /> */}
+          <Title style={{ fontSize: '24px' }}>Account Deactivated</Title>
+        </Space>
+      }
+      visible={visible}
+      onCancel={onClose}
+      footer={[
+        <Button key="reactivate" type="primary" onClick={onReactivate}>
+          Reactivate
+        </Button>,
+        <Button key="close" onClick={onClose}>
+          Close
+        </Button>,
+      ]}
+    >
+      <div style={{ textAlign: "center" }}>
+        <ExclamationCircleOutlined style={{ color: "#faad14", fontSize: "48px", marginBottom: "16px" }} />
+        <p style={{ fontSize: "16px", color: "#555" }}>
+          Your account has been deactivated. Please reactivate it or contact support for help or permanent deletion.
+        </p>
+      </div>
+    </Modal>
+  );
+
+  async function handleReactivate() {
+    try {
+
+      const response = await axiosInstance.post<any>(`/profiles/mine/reactivate`, {
+        user_email: loginUserEmail
+      });
+
+      if (response.status === 200) {
+        message.success("Your reactivation request has been sent successfully! Please try logging in again.");
+        setIsActivateModalVisible(false);
+        // Redirecting the user to the home page
+        window.location.href = '/';
+      } else {
+        message.error("Failed to send reactivation request. Please try again.");
+      }
+    } catch (error) {
+      message.error("An error occurred. Please check your connection and try again.");
+    }
+  }
 
   return (
     <PageContainer align="left">
@@ -247,12 +302,12 @@ export const Home: React.FC = () => {
       {segment === "tags" ? (
         <TagContainer>
           <Space className="mt-4 " size={[2, 8]} wrap>
-            {profile && profile.is_nsfw === true &&tags && tags.length > 0 &&
+            {profile && profile.is_nsfw === true && tags && tags.length > 0 &&
               tags
                 .map((tag) => (
                   <TagLink key={tag.id} tag={tag} />
                 ))}
-             {(!profile || profile.is_nsfw === false) &&tags && tags.length > 0 &&
+            {(!profile || profile.is_nsfw === false) && tags && tags.length > 0 &&
               tags
                 .filter((tag) => tag.Classification_of_Tag === "SFW")
                 .map((tag) => (
@@ -283,6 +338,11 @@ export const Home: React.FC = () => {
             size="small"
             cacheKey="main_page"
             additionalParams={params}
+          />
+          <ReactivationModal
+            visible={isActivateModalVisible ?? false}
+            onClose={() => setIsActivateModalVisible(false)}
+            onReactivate={handleReactivate}
           />
         </>
       )}

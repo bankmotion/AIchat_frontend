@@ -8,20 +8,28 @@ import { AppContext } from "../../../appContext";
 export const Account: React.FC = () => {
     const navigate = useNavigate();
     const [userEmail, setUserEmail] = useState<string | null>(null);
-    const { profile } = useContext(AppContext);
+    const { profile, setSession, setProfile } = useContext(AppContext);
     const userId = profile?.id;
     const userType = profile?.user_type;
 
     const deleteUser = async (userId: any) => {
 
         console.log(userId);
-        const { data, error } = await supabase.auth.api.deleteUser(userId);
+        const { data, error } = await supabase
+            .from("user_profiles")
+            .update({
+                is_able: false
+            })
+            .eq("id", userId);
+        await supabase.auth.signOut();
+        setSession(null);
+        setProfile(null);
 
         if (error) {
             console.error("Error deleting user:", error.message);
         } else {
             console.log("User deleted successfully:", data);
-            location.href='/';
+            location.href = '/';
         }
     }
 

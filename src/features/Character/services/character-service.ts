@@ -36,8 +36,10 @@ export const exportCharacter = async (
   return Exporter.Png(imgSrc, tavernJson, author);
 };
 
-export const getCharacter = async (characterId: string) => {
-  const result = await axiosInstance.get<FullCharacterView>(`/characters/${characterId}`);
+export const getCharacter = async (characterId: string, userId: string) => {
+  const result = await axiosInstance.get<FullCharacterView>(`/characters/${characterId}`, {
+    params: { userId }, // Pass userId as a query parameter
+  });
   return result.data;
 };
 
@@ -72,12 +74,12 @@ export const postReview = async (payload: CreateReviewDto) => {
   return result.data;
 };
 
-export const getSimilarCharacters = async (characterId: string, isNsfw: any) => {
+export const getSimilarCharacters = async (characterId: string,user_id:any, isNsfw: any) => {
   console.log(isNsfw,"isNsfw")
   const result = await axiosInstance.get<CharacterView[]>(
     `/characters/similarCharacters/${characterId}`, 
     {
-      params: { isNsfw },
+      params: { user_id, isNsfw },
     }
   );
 

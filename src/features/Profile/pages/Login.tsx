@@ -40,12 +40,34 @@ export const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const navigate = useNavigate();
-  const { setSession, setProfile } = useContext(AppContext);
+  const { setSession, setProfile, updateLocalData } = useContext(AppContext);
 
   const onFinish = async ({ email, password }: FormValues) => {
     setIsSubmitting(true);
 
     try {
+      // Fetch the user profile based on email
+      const { data: user, error: userError } = await supabase
+        .from("user_profiles")
+        .select("id, is_able")
+        .eq("user_email", email)
+        .single();
+
+      if (userError) {
+        console.error("Error fetching user profile:", userError);
+        message.error("Unable to verify your account status. Please try again later.");
+        return;
+      }
+
+      console.log(user, 'user')
+
+      // Check the is_able status
+      if (!user.is_able) {
+        message.error("Your account is blocked. Please contact support.");
+        return;
+      }
+
+
       const result = await supabase.auth.signInWithPassword({ email, password });
 
       if (result.error) {
@@ -90,16 +112,17 @@ export const Login = () => {
               profile: fetchedProfile.profile,
               user_name: fetchedProfile.user_name,
               config: fetchedProfile.config,
-              is_nsfw:fetchedProfile.is_nsfw,
-              is_blur:fetchedProfile.is_blur,
-              user_type:fetchedProfile.user_type
+              is_nsfw: fetchedProfile.is_nsfw,
+              is_blur: fetchedProfile.is_blur,
+              user_type: fetchedProfile.user_type
             };
-            console.log(validatedProfile.is_blur,validatedProfile.is_nsfw,"validatedProfile")
+            console.log(validatedProfile.is_blur, validatedProfile.is_nsfw, "validatedProfile")
             setProfile(validatedProfile);
           }
           else {
             console.error("Profile data is null or empty");
           }
+          updateLocalData({ is_signIn: true });
           message.success("Logged in successfully.");
           navigate("/");
         }
@@ -113,7 +136,7 @@ export const Login = () => {
     return supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: location.origin,
+        // redirectTo: location.origin,
       },
     });
   };

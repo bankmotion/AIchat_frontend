@@ -52,9 +52,20 @@ export class MockGenerate extends GenerateInterface {
         config: UserConfigAndLocalData
     ): Prompt {
         let chatCopy = chatHistory.filter((message) => message.is_main).map(chatToMessage);
-        const maxNewToken = config.generation_settings.max_new_token || 320;
+        const maxNewToken = config.generation_settings.max_new_token || 500;
         // Hack, otherwise the genrated message will be cut-off, lol
-        const maxContentLength = (config.generation_settings.context_length || 4095) - maxNewToken;
+        let context_length, maxContentLength;
+        if (config.api !== "openrouter") {
+            if (config.openrouter_model === "gryphe/mythomax-l2-13b") {
+                context_length = 4096;
+            }
+            else context_length = 8192;
+
+            maxContentLength = context_length - maxNewToken;
+        }
+        else {
+            maxContentLength = (config.generation_settings.context_length || 4095) - maxNewToken;
+        }
 
         const userMessage: OpenAIInputMessage = { role: "user", content: message };
 

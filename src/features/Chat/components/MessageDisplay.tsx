@@ -7,7 +7,7 @@ import {
   EditOutlined,
   RedoOutlined,
 } from "@ant-design/icons";
-import { MultiLineMarkdown } from "../../../shared/components/MultiLineMarkdown";
+import { MultiLineMarkdown } from "../../../shared/components/MultiLineMarkdown_Chat";
 import { getAvatarUrl, getBotAvatarUrl } from "../../../shared/services/utils";
 import { SupaChatMessage } from "../../../types/backend-alias";
 import { useContext, useRef, useState } from "react";
@@ -145,6 +145,7 @@ export const MessageDisplay: React.FC<MessageDisplayProps> = ({
             width={55}
             style={{ borderRadius: "0.5rem", filter: (message.is_bot && characterIsNsfw && (!profile || profile.is_blur)) ? "blur(25px)" : 'none'}}
             src={message.is_bot ? getBotAvatarUrl(characterAvatar) : getAvatarUrl(userAvatar)}
+            preview={!!profile && !profile.is_blur}
             fallback="https://cvochnalpmpanziphini.supabase.co/storage/v1/object/public/bot-avatars/anon.jpg"
           />
         }

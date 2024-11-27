@@ -16,7 +16,7 @@ import { useMobileDetect } from "../../hooks/useMobileDetect";
 import { getAvatarUrl } from "../services/utils";
 
 export const UserAvatar: React.FC = () => {
-  const { profile, setSession, setProfile } = useContext(AppContext);
+  const { profile, setSession, setProfile, updateLocalData } = useContext(AppContext);
   const { isMobile } = useMobileDetect();
   const navigate = useNavigate();
 
@@ -24,6 +24,7 @@ export const UserAvatar: React.FC = () => {
     await supabase.auth.signOut();
     setSession(null);
     setProfile(null);
+    updateLocalData({is_signIn:false})
 
     // navigate("/");
     location.href = "/";

@@ -76,7 +76,8 @@ export const ViewCharacter: React.FC = () => {
   const { data: character, isLoading } = useQuery(
     ["view_character", characterId],
     async () => {
-      const character = await getCharacter(characterId!);
+      console.log(profile?.id,"profile?.id")
+      const character = await getCharacter(characterId!, profile?.id!);
       return character;
     },
     {
@@ -94,8 +95,8 @@ export const ViewCharacter: React.FC = () => {
   const { data: similarCharacters } = useQuery(
     ["view_similarCharacters", characterId],
     async () => {
-      console.log(profile?.is_nsfw,"profile?.is_nsfw")
-      const similarCharacters = await getSimilarCharacters(characterId!, profile?.is_nsfw);
+      console.log(profile?.is_nsfw,"profile?.is_nsfw", characterId)
+      const similarCharacters = await getSimilarCharacters(characterId!,profile?.id, profile?.is_nsfw);
       return similarCharacters;
     },
     {
@@ -163,6 +164,7 @@ export const ViewCharacter: React.FC = () => {
 
     try {
       setIsStartingChat(true);
+      console.log("charaacterId", character?.id)
       const existingChat = await supabase
         .from("chats")
         .select("id")
@@ -184,7 +186,7 @@ export const ViewCharacter: React.FC = () => {
     } finally {
       setIsStartingChat(false);
     }
-  }, [profile]);
+  }, [profile, characterId]);
 
   const blockChar = useCallback(
     async (id: string) => {

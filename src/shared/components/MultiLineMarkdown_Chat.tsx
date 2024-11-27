@@ -40,14 +40,11 @@ export const MultiLineMarkdown: React.FC<{ children: string }> = ({ children }) 
 
   return (
     <MarkdownContainer theme={localData.theme}>
-      <p>
-        <Markdown>{limitedText}</Markdown>
-      </p>
-      {children.length > 160 && (
-        <span className="toggle-button" onClick={toggleText}>
-          {isExpanded ? "Show Less" : "Show More"}
-        </span>
-      )}
+      {children.split("\n").map((text, index) => (
+        <p key={index}>
+          <Markdown>{text}</Markdown>
+        </p>
+      ))}
     </MarkdownContainer>
   );
 };

@@ -8,9 +8,8 @@ export interface GenerationSetting {
 }
 
 export const OPENROUTER_DEFAULT_GENERATION_SETTINGS: GenerationSetting = {
-  temperature: 1,
-  max_new_token: 300,
-  context_length: 4096,
+  temperature: 1.05,
+  max_new_token: 500,
 };
 
 export const OPEN_AI_DEFAULT_GENERATION_SETTINGS: GenerationSetting = {

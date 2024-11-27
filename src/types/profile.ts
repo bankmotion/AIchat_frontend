@@ -14,6 +14,8 @@ export interface Profile {
   is_blur?:boolean;
   user_type?:number;
   admin_api_usage_count?:number;
+  is_able?:boolean;
+  user_email?:string;
   // block_list?:Json;
 
   block_list?: BlockList | null;

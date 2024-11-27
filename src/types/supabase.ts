@@ -204,6 +204,8 @@ export interface Database {
           is_blur:boolean
           user_type:number
           admin_api_usage_count:number
+          is_able: boolean
+          user_email:string
         }
         Insert: {
           about_me?: string
@@ -219,6 +221,8 @@ export interface Database {
           is_blur?:boolean
           user_type?:number
           admin_api_usage_count?:number
+          is_able?:boolean
+          user_eamil?:string
         }
         Update: {
           about_me?: string
@@ -234,6 +238,8 @@ export interface Database {
           is_blur?:boolean
           user_type?:number
           admin_api_usage_count?:number
+          is_able?:boolean
+          user_eamil?:string
         }
       }
       user_reports: {

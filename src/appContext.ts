@@ -14,6 +14,10 @@ interface AppContextType {
   updateConfig: (config: Partial<UserConfig>) => void;
   localData: UserLocalData;
   updateLocalData: (data: Partial<UserLocalData>) => void;
+  isActivateModalVisible?: boolean;
+  setIsActivateModalVisible: (isActivateModalVisible: boolean) =>void;
+  setLoginUserEmail:(loginUserEmail:string)=>void;
+  loginUserEmail?:string;
 }
 
 export const AppContext = createContext<AppContextType>({
@@ -23,4 +27,6 @@ export const AppContext = createContext<AppContextType>({
   isProfileLoading: false,
   updateLocalData: (data) => {},
   updateConfig: (config) => {},
+  setIsActivateModalVisible:(isActivateModalVisible) =>{},
+  setLoginUserEmail:(loginUserEmail)=>{}
 });

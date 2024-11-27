@@ -220,9 +220,13 @@ const router = createBrowserRouter([
       },
 
       // Protected Profile Routes
+      // {
+      //   path: "/profile",
+      //   element:<ProfilePage />,
+      // },
       {
         path: "/profile",
-        element:<ProfilePage />,
+        element: <ProtectedRoute><ProfilePage /></ProtectedRoute>,
       },
       {
         path: "/profiles/:profileId",
@@ -300,7 +304,9 @@ const App: React.FC = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [config, setConfig] = useState<UserConfig | undefined>();
   const [localData, setLocalData] = useState<UserLocalData>(getLocalData());
-
+  const [isActivateModalVisible, setIsActivateModalVisible] = useState(false);
+  const [loginUserEmail, setLoginUserEmail] = useState('');
+  let invokingCount = 0;
   const updateLocalData = useCallback(
     (newData: Partial<UserLocalData>) => {
       setLocalData((oldData) => {
@@ -338,6 +344,37 @@ const App: React.FC = () => {
 
       if (response.data.session) {
         console.log(response.data.session, "response.data.session")
+
+        if (response.data.session.user.email) {
+          const { data: user, error: userError } = await supabase
+            .from("user_profiles")
+            .select("id, is_able, user_email")
+            .eq("user_email", response.data.session.user.email)
+            .single();
+
+          console.log(user, "user")
+
+
+          if (user && !user?.is_able) {
+            invokingCount++;
+            if (invokingCount === 2) {
+              message.error("Your account is blocked. Please contact support.");
+              console.log("sdfsfsdfdsfdsfds")
+              setIsActivateModalVisible(true); // Show the modal
+              setLoginUserEmail(user.user_email);
+              invokingCount = 0;
+            }
+            // message.error("Your account is disabled. Please contact support.");
+            // console.log("sdfsfsdfdsfdsfds")
+            // setIsActivateModalVisible(true); // Show the modal
+            await supabase.auth.signOut();
+            setSession(null);
+            setProfile(null);
+            return;
+          }
+        }
+
+
         setSession(response.data.session);
 
         // Insert profile data into the profile table
@@ -347,6 +384,8 @@ const App: React.FC = () => {
           block_list: { bots: [], creators: [], tags: [] }, // Default empty block list
           is_verified: false,
           config: {}, // Default configuration
+          is_able: true,
+          user_email: response.data.session.user.email
         };
 
         const { data, error: profileInsertError } = await supabase
@@ -405,6 +444,7 @@ const App: React.FC = () => {
           // Update the profile state
           setProfile(validatedProfile);
           updateConfig(getUserConfig(validatedProfile.config));
+          updateLocalData({ is_signIn: true })
           console.log(getUserConfig(JSON.stringify(validatedProfile.config)));
         }
         else {
@@ -459,6 +499,10 @@ const App: React.FC = () => {
         updateConfig,
         localData,
         updateLocalData,
+        isActivateModalVisible,
+        setIsActivateModalVisible,
+        loginUserEmail,
+        setLoginUserEmail
       }}
     >
       <ConfigProvider

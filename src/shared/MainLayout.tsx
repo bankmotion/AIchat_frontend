@@ -15,6 +15,8 @@ export const MainLayout: React.FC = () => {
   const { session, profile, isProfileLoading } = useContext(AppContext);
   const { isMobile } = useMobileDetect();
 
+  console.log(session,"session_mainlayout")
+
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <Header>

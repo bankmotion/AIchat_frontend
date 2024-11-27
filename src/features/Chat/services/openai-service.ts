@@ -36,9 +36,10 @@ export const buildSystemInstruction = (
 
   const jailbreakPrompt = config.jailbreak_prompt;
 
+  // {{char}}'s name: ${name}. {{user}}'s name : ${profile.name}. {{char}} calls always {{user}} by {{user}}'s name or any name introduced by {{user}} in the first part of each conversation. Additionally, when {{user}} ask {{char}} what is his name, {{char}} answers as his name is ${profile.name} politely.
   // Remove linebreak and tab to save token lol
   const promptWithCharInfo = `${jailbreakPrompt}.
-    {{char}}'s name: ${name}. {{char}} calls {{user}} by {{user}} or any name introduced by {{user}}.
+    {{char}}'s name: ${name}. {{user}}'s name : ${profile.name}. {{char}} calls always {{user}} by {{user}}'s name or any name introduced by {{user}} in the first part of each conversation. Additionally, when {{user}} ask {{char}} like this:"what is my name?" or"Do you know my name?", {{char}} answers as "your name is " ${profile.name} politely.
     ${personality ? `{{char}}'s personality: ${personality}.` : ""}
     ${scenario ? `Scenario of the roleplay: ${scenario}.` : ""}
     ${summary ? `Summary of what happened: ${summary}.` : ""}

@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { AppContext } from '../../appContext';
 import { supabase } from '../../config';
@@ -10,18 +10,18 @@ interface ProtectedRouteProps {
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     const { session, setSession, localData } = useContext(AppContext);
     const location = useLocation();
-    const [loading, setLoading] = useState(true); // To handle async session load
+
+    console.log(session, localData, "localData_protected")
 
     // List of routes that require authentication
     const protectedPaths = [
         '/create_character',
         '/pricing',
         '/my_characters',
+        // '/my_chats',
         '/blocks',
-        '/edit_character',
-        '/my_chats',
-        '/profile',
-        '/account'
+        // '/profile',
+        '/edit_character'
     ];
 
     // Check if the current path starts with any protected path
@@ -30,25 +30,17 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
 
     useEffect(() => {
-        async function fetchSession() {
+        async function run() {
             const response = await supabase.auth.getSession();
             setSession(response.data.session);
-            setLoading(false); // Mark loading as false once session is fetched
+            if (!session && isProtectedPath) {
+                return <Navigate to="/login" state={{ from: location }} replace />;
+            }
         }
-        fetchSession();
-    }, [setSession]);
 
-    if (loading) {
-        return <div>Loading...</div>; // Optional: show loading while fetching session
-    }
+    }, [session])
 
-    if (!session && isProtectedPath) {
-        return <Navigate to="/login" state={{ from: location }} replace />;
-    }
 
-    if (localData.is_signIn) {
-        return <>{children}</>;
-    }
-
-    return <Navigate to="/login" state={{ from: location }} replace />;
-};
+    if (localData.is_signIn) { return <>{children}</>; }
+    else return <Navigate to="/login" state={{ from: location }} replace />;
+}; 

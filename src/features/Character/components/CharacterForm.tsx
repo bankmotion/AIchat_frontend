@@ -1,4 +1,4 @@
-import { useCallback, useContext, useState } from "react";
+import { useCallback, useContext, useState, useEffect } from "react";
 import {
   Form,
   Input,
@@ -26,7 +26,7 @@ import { AxiosError } from "axios";
 import { useQueryClient } from "react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from 'uuid';
-import { CharacterLite, SupaCharacter } from "../../../types/backend-alias";
+import { CharacterLite, SupaCharacter, TagEntity } from "../../../types/backend-alias";
 import { AppContext } from "../../../appContext";
 import { Tokenizer } from "../services/character-parse/tokenizer";
 import { characterUrl } from "../../../shared/services/url-utils";
@@ -45,7 +45,7 @@ interface FormValues {
   example_dialogs: string;
   first_message: string;
   creator_id?: string;
-  creator_name?:string;
+  creator_name?: string;
   is_nsfw: boolean;
   is_public: boolean;
   tag_ids: number[];
@@ -79,7 +79,34 @@ export const CharacterForm: React.FC<CharacterFormProps> = ({ id, values }) => {
   const exampleDialogWatch = Form.useWatch<string>("example_dialogs", form);
   const firstMessageWatch = Form.useWatch<string>("first_message", form);
 
-  const tags = useTags();
+  // const tags = useTags();
+  const [tags, setTags] = useState<TagEntity[]>([]); // Tracks selected tags
+  const [isNSFW, setIsNSFW] = useState(false); // Tracks NSFW state
+  const allTags = useTags(); // Fetch all tags
+  const sfwTags = allTags?.filter((tag) => tag.Classification_of_Tag === "SFW") || [];
+
+  useEffect(() => {
+    if (allTags) {
+      setTags(isNSFW ? allTags : sfwTags); // Set tags based on NSFW state
+    }
+  }, [allTags, isNSFW]);
+
+  // const sfwTags = allTags?.filter((tag) => tag.Classification_of_Tag === "SFW")||[];
+
+  console.log(allTags?.length, "tags", sfwTags?.length, "sfwtags")
+
+  const handleTagsChange = (e: any) => {
+    const selectedValue = e.target.value === true; // Ensure value is boolean
+    setIsNSFW(selectedValue);
+
+    // Dynamically update tags
+    if (allTags) {
+      setTags(selectedValue ? allTags : sfwTags);
+
+    }
+  };
+
+  console.log(tags.length, "tags_correct")
 
   const mode = id ? "edit" : "create";
 
@@ -105,21 +132,21 @@ export const CharacterForm: React.FC<CharacterFormProps> = ({ id, values }) => {
         console.log(compressedImage, "compressedImage")
         const extension = compressedImage.name.substring(avatarImg.name.lastIndexOf(".") + 1);
         console.log(extension, "extension")
-        const filePath = `images/character-avatars/${ uuidv4()}.${extension}`;
+        const filePath = `images/character-avatars/${uuidv4()}.${extension}`;
         const uploadedAvatar = await supabase.storage
           .from("cdn.venusai.chat")
           .upload(filePath, compressedImage, {
             cacheControl: "1209600", // 2 weeks
             upsert: true,
           });
-          if (uploadedAvatar.error) {
-            console.error("Error uploading avatar:", uploadedAvatar.error);
-          } else {
-            console.log("Avatar uploaded successfully:", uploadedAvatar.data);
-          }
+        if (uploadedAvatar.error) {
+          console.error("Error uploading avatar:", uploadedAvatar.error);
+        } else {
+          console.log("Avatar uploaded successfully:", uploadedAvatar.data);
+        }
         if (uploadedAvatar?.data?.path) {
           avatar = uploadedAvatar.data.path;
-          console.log(avatar,"avatar")
+          console.log(avatar, "avatar")
           setBotAvatar(avatar);
         }
       }
@@ -133,7 +160,7 @@ export const CharacterForm: React.FC<CharacterFormProps> = ({ id, values }) => {
           ...postData,
           avatar: avatar || values.avatar,
           creator_id: values.creator_id,
-          creator_name:values.creator_name
+          creator_name: values.creator_name
         });
         message.success("Character created successfully!");
         queryClient.invalidateQueries(["characters", profile?.id]);
@@ -392,7 +419,7 @@ export const CharacterForm: React.FC<CharacterFormProps> = ({ id, values }) => {
         </Form.Item>
 
         <Form.Item label="Rating" name="is_nsfw" className="pt-2 mb-4">
-          <Radio.Group>
+          <Radio.Group onChange={handleTagsChange}>
             <Radio value={false}>👪 SFW </Radio>
             <Radio value={true}>🔞 NSFW</Radio>
           </Radio.Group>
