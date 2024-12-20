@@ -1,7 +1,7 @@
-import { Button, Col, Row, Spin, List, message, ColProps } from "antd";
-import { LeftCircleFilled, LeftOutlined, RightOutlined } from "@ant-design/icons";
+import { Button, Col, Row, Spin, List, message, ColProps, Modal } from "antd";
+import { ExclamationCircleOutlined, InfoCircleOutlined, LeftCircleFilled, LeftOutlined, RightOutlined } from "@ant-design/icons";
 import { useQuery } from "react-query";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { findLast } from "lodash-es";
 
 import { ChatMessageEntity, SupaChatMessage } from "../../../types/backend-alias";
@@ -30,6 +30,7 @@ import { Helmet } from "react-helmet";
 import { getBotAvatarUrl } from "../../../shared/services/utils";
 import { characterUrl } from "../../../shared/services/url-utils";
 import { Profile } from "../../../types/profile";
+import { axiosInstance, supabase } from "../../../config";
 
 interface ChatState {
   messages: SupaChatMessage[]; // All server-side messages
@@ -85,8 +86,8 @@ const CHAT_COLUMN_PROPS: ColProps = { lg: 14, xs: 24, md: 18 };
 
 export const ChatPage: React.FC = () => {
   const { profile, config, localData } = useContext(AppContext);
+  const navigate = useNavigate();
   const { chatId } = useParams();
-  console.log(chatId, "chatId")
   const messageDivRef = useRef<HTMLDivElement>(null);
   const botChoiceDivRef = useRef<HTMLDivElement>(null);
 
@@ -95,18 +96,17 @@ export const ChatPage: React.FC = () => {
 
   const [chatState, dispatch] = useReducer(dispatchFunction, initialChatState);
   const { choiceIndex, messagesToDisplay } = chatState;
-  console.log(messagesToDisplay, 'messagesToDisplay')
+
   const mainMessages = messagesToDisplay.filter((message) => message.is_main);
   const botChoices = messagesToDisplay.filter((message) => message.is_bot && !message.is_main);
-  console.log(mainMessages, "mainMessages")
-  console.log(botChoices, "botChoices")
-
-  console.log(config,"chatPage")
-  console.log(profile,"chatPage")
-
   const isImmersiveMode = Boolean(config?.immersive_mode);
   const readyToChat = chatService.readyToChat(config, localData);
-
+  const isMessageLimit = (botChoices[0]?.message === "Your messages are ended. Please upgrade your current plan.")
+  console.log(isMessageLimit, "isMessageLimit")
+  const [upgradeRequestModalVisible, setUpgradeRequestModalVisible] = useState(false);
+  const closeModal = () => {
+    setUpgradeRequestModalVisible(false);
+  };
   const fullConfig: UserConfigAndLocalData = useMemo(() => {
     return { ...localData, ...config! };
   }, [localData, config]);
@@ -154,27 +154,52 @@ export const ChatPage: React.FC = () => {
     }, 50);
   }, [messageDivRef.current, botChoiceDivRef.current]);
 
-  console.log(profile?.id,"profile?.id")
+  console.log(profile?.id, "profile?.id")
 
-  const { data, refetch, isLoading, error } = useQuery(
+  // const { data, refetch, isLoading, error } = useQuery(
+  //   ["chat", chatId, profile?.id],
+  //   async () => chatService.getChatById(chatId, profile?.id),
+  //   {
+  //     enabled: false,
+  //     onSuccess: (chatData) => {
+  //       // Only scroll and focus for own chat, not public chat lol
+  //       if (chatData.chat.user_id === profile?.id) {
+  //         setShouldFocus(true);
+  //         scrollToBottom();
+  //       }
+  //     },
+  //     retry: 1,
+  //   }
+  // );
+  // const canEdit = useMemo(
+  //   () => Boolean(profile && profile.id === data?.chat.user_id),
+  //   [profile, data?.chat.user_id]
+  // );
+  const { data, isLoading, error, refetch } = useQuery(
     ["chat", chatId, profile?.id],
     async () => chatService.getChatById(chatId, profile?.id),
     {
-      enabled: false,
+      enabled: !!chatId && !!profile?.id, // Ensure chatId and profile are available before fetching
+      retry: 1,
       onSuccess: (chatData) => {
-        // Only scroll and focus for own chat, not public chat lol
-        if (chatData.chat.user_id === profile?.id) {
+        // Scroll and focus only if the chat belongs to the current user
+        if (chatData.chat?.user_id === profile?.id) {
           setShouldFocus(true);
-          scrollToBottom();
         }
       },
-      retry: 1,
     }
   );
-  const canEdit = useMemo(
-    () => Boolean(profile && profile.id === data?.chat.user_id),
-    [profile, data?.chat.user_id]
-  );
+  // Automatically scroll to bottom if shouldFocus is true
+  useEffect(() => {
+    if (shouldFocus) {
+      scrollToBottom();
+    }
+  }, [shouldFocus]);
+  // Compute canEdit after data is fetched
+  const canEdit = useMemo(() => {
+    if (!profile || !data?.chat) return false;
+    return profile.id === data.chat.user_id;
+  }, [profile, data?.chat]);
 
   console.log(canEdit, data?.chat, "canEdit")
 
@@ -193,8 +218,12 @@ export const ChatPage: React.FC = () => {
     refreshChats();
   }, [profile]);
 
+  useEffect(() => {
+    setUpgradeRequestModalVisible(isMessageLimit);
+  }, [isMessageLimit]);
+
   const deleteMessage = async (messageByCreatedAt: string) => {
-    if (!messageByCreatedAt ) {
+    if (!messageByCreatedAt) {
       return;
     }
 
@@ -263,7 +292,7 @@ export const ChatPage: React.FC = () => {
       // This method might fail for multiple reasons, allow user to regenerate
       const botMessages = await generateInstance.generate(prompt, fullConfig);
 
-      console.log(botMessages,"botMessages")
+      console.log(botMessages, "botMessages")
 
       if (direction === "right" || direction === "regen") {
         const oldHeight = botChoiceDivRef.current?.getBoundingClientRect().height || 0;
@@ -287,12 +316,6 @@ export const ChatPage: React.FC = () => {
         }
 
         if (streamingText.length > 0) {
-          // const botMessage = await chatService.createMessage(chatId, {
-          //   message: streamingText,
-          //   is_bot: true,
-          //   is_main: false,
-          // });
-
           chatService
             .createMessage(chatId, {
               message: streamingText,
@@ -357,7 +380,6 @@ export const ChatPage: React.FC = () => {
         is_mock: (config?.api === "mock"),
       };
 
-      console.log(config, "fsdfdsfdfwefw")
 
       console.log("User and bot local messages defined.", { localUserMessage, localBotMessage });
 
@@ -474,6 +496,31 @@ export const ChatPage: React.FC = () => {
     dispatch({ type: "message_edited", message: item });
   };
 
+
+  useEffect(() => {
+    async function run() {
+      const response = await supabase.auth.getSession();
+      const email = response.data.session?.user?.email || null;
+      if (email) {
+
+        try {
+          const response = await axiosInstance.post("/subscription/checkStatus", {
+            email: email
+          });
+
+          console.log(response, "response_update_status")
+
+          if (response.data.result == false) {
+            console.error('response.data.result :', response.data.result);
+          }
+        }
+        catch (error) {
+          console.error('Error:', error);
+        }
+      }
+    }
+  }, [])
+
   if (!isLoading && error) {
     return (
       <ChatLayout showControl={false}>
@@ -484,29 +531,6 @@ export const ChatPage: React.FC = () => {
       </ChatLayout>
     );
   }
-
-
-  //End Generating Message.
-  // const endGeneratingMessages = (mainMessages: any[], profile: Profile | null | undefined): boolean => {
-
-  //   const GenMessagesNumByAdmin = mainMessages.filter((message) => !message.is_bot && message.is_mock).length;
-
-  //   if (profile?.user_type === 1 && GenMessagesNumByAdmin >= 20) {
-  //     return true
-  //   }
-
-  //   else if (profile?.user_type === 2 && GenMessagesNumByAdmin >= 5) {
-  //     return true
-  //   }
-
-  //   else if (profile?.user_type === 3 && GenMessagesNumByAdmin >= 7) {
-  //     return true
-  //   }
-  //   else return false
-  // }
-
-  // Calculate the boolean result before passing it to ChatInput
-  // const shouldEndGenerating = endGeneratingMessages(mainMessages, profile);
 
   return (
     <ChatLayout showControl={canEdit}>
@@ -550,6 +574,7 @@ export const ChatPage: React.FC = () => {
               </Link>
               <ChatOptionMenu
                 readyToChat={readyToChat}
+                isMessageLimit={isMessageLimit}
                 chat={data.chat}
                 onReload={() => refreshChats()}
               />
@@ -584,7 +609,7 @@ export const ChatPage: React.FC = () => {
                       onRegenerate={() => swipe("regen")}
                       characterName={data.chat.characters.name}
                       characterAvatar={data.chat.characters.avatar}
-                      characterIsNsfw = {data.chat.characters.is_nsfw}
+                      characterIsNsfw={data.chat.characters.is_nsfw}
                       onDelete={deleteMessage}
                       onEdit={async (messageId, newMessage) => {
                         editMessage(item, messageId, newMessage);
@@ -634,7 +659,7 @@ export const ChatPage: React.FC = () => {
                           showRegenerate={false}
                           characterName={data.chat.characters.name}
                           characterAvatar={data.chat.characters.avatar}
-                          characterIsNsfw = {data.chat.characters.is_nsfw}
+                          characterIsNsfw={data.chat.characters.is_nsfw}
                           onDelete={deleteMessage}
                           onEdit={(messageId, newMessage) => {
                             editMessage(item, messageId, newMessage);
@@ -647,18 +672,51 @@ export const ChatPage: React.FC = () => {
               </ChatContainer>
             </Col>
           </Row>
+          {/* Modal for confirmation */}
+          <Modal
+            title="Upgrade Required"
+            visible={upgradeRequestModalVisible}
+            okText="Upgrade"
+            cancelButtonProps={{ style: { display: 'none' } }}  // Hide Cancel button
+            onCancel={closeModal}
+            footer={[
+              <Button type="primary" key="upgrade" size="large" style={{ width: "100%", fontWeight: "bold" }} onClick={() => navigate("/pricing")}>
+                Upgrade Now
+              </Button>,
+            ]}
+            bodyStyle={{
+              textAlign: "center",  // Center align text
+              padding: "20px",  // Add padding around the content
+            }}
+          >
+            <div style={{ marginBottom: "20px" }}>
+              <p style={{ fontSize: "18px", marginBottom: "10px", color: "#e74c3c" }}>
+                <ExclamationCircleOutlined style={{ color: "#e74c3c", marginRight: "8px" }} />
+                <strong>Your Message Limit Hit</strong>
+              </p>
+              <p style={{ fontSize: "16px", marginBottom: "20px", color: "#2980b9" }}>
+                Upgrade Now To Keep Chatting!
+              </p>
+              <p style={{ fontSize: "14px", color: "#95a5a6" }}>
+                After subscribing, please refresh the page to continue.
+              </p>
+            </div>
+          </Modal>
         </>
-      )}
+      )
+      }
 
-      {!isLoading && canEdit && (
-        <ChatInput
-          shouldFocus={shouldFocus}
-          readyToChat={readyToChat}
-          isGenerating={isGenerating}
-          // endGeneratingMessages={shouldEndGenerating}
-          onGenerateChat={(message) => generateChat(message)}
-        />
-      )}
-    </ChatLayout>
+      {
+        !isLoading && canEdit && (
+          <ChatInput
+            shouldFocus={shouldFocus}
+            readyToChat={readyToChat}
+            isGenerating={isGenerating}
+            isMessageLimit={isMessageLimit}
+            onGenerateChat={(message) => generateChat(message)}
+          />
+        )
+      }
+    </ChatLayout >
   );
 };

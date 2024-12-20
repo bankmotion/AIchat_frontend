@@ -27,7 +27,7 @@ export class MockGenerate extends GenerateInterface {
         if (result.status === 200) {
             const finalResult = result.data;
             if (finalResult === '') {
-                yield "Free messages are ended. Please upgrade your current plan.";
+                yield "Your messages are ended. Please upgrade your current plan.";
             }
             else {
                 const words = finalResult.split(" ");

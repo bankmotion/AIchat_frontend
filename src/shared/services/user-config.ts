@@ -56,17 +56,43 @@ const defaultUserConfig: UserConfig = {
   immersive_mode: false,
 };
 
-export const getUserConfig = (config?: Json | Partial<UserConfig>) => {
+// export const getUserConfig = (config?: Json | Partial<UserConfig>) => {
 
-  console.log(config,typeof config,"typeof config")
+//   console.log(config,typeof config,"typeof config")
+//   if (!config || typeof config !== "object") {
+//     return defaultUserConfig;
+//   }
+
+//   if (typeof config === "object") {
+//     Object.keys(config).forEach((key) => {
+//       // @ts-ignore
+//       if (config[key] === undefined || config[key].length === 0) {
+//         // @ts-ignore
+//         delete config[key];
+//       }
+//     });
+//   }
+
+//   return { ...defaultUserConfig, ...config };
+// };
+
+export const getUserConfig = (config?: Json | Partial<UserConfig>, isLoggedIn: boolean = false) => {
+  console.log(config, typeof config, "typeof config");
+
+  // If user is logged in and no config is provided, return default config
+  if (!config && isLoggedIn) {
+    return defaultUserConfig;
+  }
+
   if (!config || typeof config !== "object") {
     return defaultUserConfig;
   }
 
+  // Sanitize the config object: Remove undefined or empty array values
   if (typeof config === "object") {
     Object.keys(config).forEach((key) => {
-      // @ts-ignore
-      if (config[key] === undefined || config[key].length === 0) {
+      // @ts-ignore - Safe type assumption: We check if the key exists in config
+      if (config[key] === undefined || (Array.isArray(config[key]) && config[key].length === 0)) {
         // @ts-ignore
         delete config[key];
       }
@@ -75,6 +101,7 @@ export const getUserConfig = (config?: Json | Partial<UserConfig>) => {
 
   return { ...defaultUserConfig, ...config };
 };
+
 
 export const updateUserConfig = (config: Partial<UserConfig>, profileId: string) => {
   const newConfig = getUserConfig(config);

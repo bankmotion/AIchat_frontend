@@ -22,9 +22,10 @@ interface ChatOptionMenuProps {
   chat: ChatEntityWithCharacter;
   onReload: () => void;
   readyToChat: boolean;
+  isMessageLimit: boolean;
 }
 
-export const ChatOptionMenu: React.FC<ChatOptionMenuProps> = ({ chat, onReload, readyToChat }) => {
+export const ChatOptionMenu: React.FC<ChatOptionMenuProps> = ({ chat, onReload, readyToChat, isMessageLimit }) => {
   const { profile, config, updateConfig, localData } = useContext(AppContext);
   const userType = profile?.user_type;
   const queryClient = useQueryClient();
@@ -64,7 +65,17 @@ export const ChatOptionMenu: React.FC<ChatOptionMenuProps> = ({ chat, onReload, 
     <>
       <span style={{ marginLeft: "auto" }}>
         {readyToChat ? (
-          <Tag color="green">API is ready. Using {config.api}.</Tag>
+          !isMessageLimit ? (
+            <Tag color="green">API is ready. Using {config.api}.</Tag>
+          ) : (
+            <Tag
+              style={{ cursor: "pointer" }}
+              color="red"
+              onClick={() => setOpenChatSettingsModal(true)}
+            >
+              Your Message Limit is up! Check Right Menu.
+            </Tag>
+          )
         ) : (
           <Tag
             style={{ cursor: "pointer" }}
@@ -89,30 +100,65 @@ export const ChatOptionMenu: React.FC<ChatOptionMenuProps> = ({ chat, onReload, 
                   <div
                     style={{ display: "flex", alignItems: "center", width: "auto", whiteSpace: "nowrap" }} // Aligns items in a row with spacing
                   >
-                    <span style={{ whiteSpace: "nowrap" }}>{userType=== 1 && 'Free Trial'}{userType===2  && 'Premium'}{userType=== 3 && 'Deluxe'}</span>
+                    <span style={{ whiteSpace: "nowrap" }}>{userType === 1 && 'Free Trial'}{userType === 2 && 'Premium'}{userType === 3 && 'Deluxe'}</span>
                     <Button
                       type="primary"
                       onClick={() => {
                         navigate("/pricing");
                       }}
                       block
-                      style={{ whiteSpace: "nowrap", height: "auto" }}
+                      style={{ whiteSpace: "nowrap", height: "auto", marginLeft:"5px" }}
                     >
-                      {userType=== 1 && 'Upgrade'}{(userType=== 2 ||3) && 'Upgrade Plan'}
+                      {userType === 1 ? 'Upgrade' : (userType === 2 || userType === 3) ? 'Upgrade Plan' : ''}
                     </Button>
                   </div>
                   <div
                     style={{
                       display: "flex",
-                      justifyContent: "center", // Centers the text horizontally
-                      alignItems: "center",      // Centers vertically if needed
-                      width: "100%",             // Makes the div full width
-                      paddingTop: "10px",        // Adds top padding
-                      color: "green",             // Sets text color to blue
+                      flexDirection: "column",    // Arrange text vertically
+                      justifyContent: "center",   // Centers the text horizontally
+                      width: "100%",              // Makes the div full width
+                      paddingTop: "20px",         // Adds top padding
+                      color: "#333",              // Default text color for readability
                     }}
                   >
-                    Just Enjoy :)
+                    {isMessageLimit ? (
+                      <>
+                        <p
+                          style={{
+                            fontSize: "15px",
+                            marginBottom: "8px",
+                            color: "#e74c3c", // Red color for urgency
+                          }}
+                        >
+                          Your Message Limit Hit
+                        </p>
+                        <p
+                          style={{
+                            fontSize: "15px",
+                            color: "#e74c3c", // Keep the red color for consistency
+                            marginBottom: "20px", // Add space between the lines
+                          }}
+                        >
+                          Upgrade Now To Keep Chatting!
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p
+                          style={{
+                            fontSize: "20px",
+                            fontWeight: "bold",
+                            color: "#27ae60", // Green color for positivity
+                            marginBottom: "10px", // Space for the next line
+                          }}
+                        >
+                          Just Enjoy :)
+                        </p>
+                      </>
+                    )}
                   </div>
+
                 </Tooltip>
               ),
             },

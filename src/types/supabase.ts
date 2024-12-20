@@ -206,6 +206,9 @@ export interface Database {
           admin_api_usage_count:number
           is_able: boolean
           user_email:string
+          paid_api_usage_count:number
+          admin_api_usage_updatedAt:Date
+          paid_api_usage_updatedAt: Date
         }
         Insert: {
           about_me?: string
@@ -223,6 +226,9 @@ export interface Database {
           admin_api_usage_count?:number
           is_able?:boolean
           user_eamil?:string
+          paid_api_usage_count?:number
+          admin_api_usage_updatedAt?:Date
+          paid_api_usage_updatedAt?:Date
         }
         Update: {
           about_me?: string
@@ -240,6 +246,18 @@ export interface Database {
           admin_api_usage_count?:number
           is_able?:boolean
           user_eamil?:string
+          paid_api_usage_count?:number
+          admin_api_usage_updatedAt?:Date
+          paid_api_usage_updatedAt?:Date
+        }
+      }
+      subscriptions: {
+        Row: {
+          user_id: string
+          status: string
+          current_plan:string
+          reserved_plan: string
+          cancel_at_period_end:boolean
         }
       }
       user_reports: {

@@ -22,9 +22,9 @@ const queryClient = new QueryClient({
 const App = loadable(() => import("./App"));
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>
+  // <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <App />
     </QueryClientProvider>
-  </React.StrictMode>
+  // {/* </React.StrictMode> */}
 );

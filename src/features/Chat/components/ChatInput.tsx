@@ -20,7 +20,7 @@ export interface ChatInputProps {
   shouldFocus: boolean;
   readyToChat: boolean;
   isGenerating: boolean;
-  // endGeneratingMessages:boolean;
+  isMessageLimit: boolean;
   onGenerateChat(inputMessage: string): void;
 }
 
@@ -28,7 +28,7 @@ const ChatInputInternal: React.FC<ChatInputProps> = ({
   shouldFocus,
   readyToChat,
   isGenerating,
-  // endGeneratingMessages,
+  isMessageLimit,
   onGenerateChat,
 }) => {
   const [inputMessage, setInputMessage] = useState<string>("");
@@ -60,11 +60,13 @@ const ChatInputInternal: React.FC<ChatInputProps> = ({
             <div className="d-flex align-center">
               <Input.TextArea
                 rows={3}
-                disabled={!readyToChat}
+                disabled={!readyToChat || isMessageLimit}
                 placeholder={
-                  readyToChat
-                    ? placeholder
-                    : "Please setup the API on top right corner to start chating."
+                  !readyToChat 
+                    ? placeholder  // if readyToChat is false, use the existing placeholder
+                    : isMessageLimit 
+                      ? "Your message limit hit. Please upgrade the current plan."  // if readyToChat is true and isMessageLimit is true
+                      : "Please setup the API on top right corner to start chatting."  // if readyToChat is true and isMessageLimit is false
                 }
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}

@@ -1,0 +1,33 @@
+/* src/styles.css */
+.checkout-form {
+    max-width: 450px;
+    margin: 0 auto;
+    padding: 20px;
+    border-radius: 8px;
+    background-color: #fff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .checkout-form .ant-btn-primary {
+    background-color: #4CAF50;
+    border-color: #4CAF50;
+  }
+  
+  .checkout-form .ant-btn-primary:hover {
+    background-color: #45a049;
+  }
+  
+  .checkout-form .ant-alert {
+    margin-top: 20px;
+  }
+
+  .custom-modal .ant-modal-header {
+    text-align: center; /* Center the title */
+  }
+  
+  .custom-modal .ant-modal-title {
+    color: pink; /* Change the title color to pink */
+    font-size: 20px; /* Adjust title font size if needed */
+    font-weight: bold; /* Make the title bold */
+  }
+  

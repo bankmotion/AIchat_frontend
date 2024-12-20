@@ -4,6 +4,7 @@ import { ConfigProvider, App as AntdApp, theme, Spin, message } from "antd";
 import loadable from "@loadable/component";
 import { isEqual, isNull } from "lodash-es";
 import { Session } from "@supabase/supabase-js";
+import { Elements } from '@stripe/react-stripe-js';
 
 import { AppContext } from "./appContext";
 import { axiosInstance, supabase } from "./config";
@@ -15,6 +16,9 @@ import { getUserConfig, updateUserConfig, UserConfig } from "./shared/services/u
 import { MainLayout } from "./shared/MainLayout";
 import { profileService } from "./features/Profile/services/profile-service";
 import { ProtectedRoute } from "./shared/components/Protectroute";
+import stripePromise from "./shared/services/stripe";
+import './styles.css';
+
 
 const Home = loadable(() => import("./features/Home/pages/Home"), {
   resolveComponent: (component) => component.Home,
@@ -385,9 +389,10 @@ const App: React.FC = () => {
           is_verified: false,
           config: {}, // Default configuration
           is_able: true,
-          user_email: response.data.session.user.email
+          user_email: response.data.session.user.email,
+          admin_api_usage_updatedAt:new Date()
         };
-
+        console.log("sdfweffwefwefwefwfwef")
         const { data, error: profileInsertError } = await supabase
           .from("user_profiles")
           .insert([profileData]);
@@ -439,6 +444,8 @@ const App: React.FC = () => {
             is_blur: fetchedProfile.is_blur,
             user_type: fetchedProfile.user_type,
             admin_api_usage_count: fetchedProfile.admin_api_usage_count,
+            user_email:fetchedProfile.user_email,
+            
           };
 
           // Update the profile state
@@ -488,38 +495,40 @@ const App: React.FC = () => {
   );
 
   return (
-    <AppContext.Provider
-      value={{
-        session,
-        setSession,
-        profile,
-        setProfile,
-        isProfileLoading,
-        config,
-        updateConfig,
-        localData,
-        updateLocalData,
-        isActivateModalVisible,
-        setIsActivateModalVisible,
-        loginUserEmail,
-        setLoginUserEmail
-      }}
-    >
-      <ConfigProvider
-        theme={{
-          algorithm: [
-            theme.darkAlgorithm,
-          ],
-          token: {
-            fontSize: 16,
-          },
+    <Elements stripe={stripePromise}>
+      <AppContext.Provider
+        value={{
+          session,
+          setSession,
+          profile,
+          setProfile,
+          isProfileLoading,
+          config,
+          updateConfig,
+          localData,
+          updateLocalData,
+          isActivateModalVisible,
+          setIsActivateModalVisible,
+          loginUserEmail,
+          setLoginUserEmail
         }}
       >
-        <AntdApp className="global-css-override">
-          <RouterProvider router={router} />
-        </AntdApp>
-      </ConfigProvider>
-    </AppContext.Provider>
+        <ConfigProvider
+          theme={{
+            algorithm: [
+              theme.darkAlgorithm,
+            ],
+            token: {
+              fontSize: 16,
+            },
+          }}
+        >
+          <AntdApp className="global-css-override">
+            <RouterProvider router={router} />
+          </AntdApp>
+        </ConfigProvider>
+      </AppContext.Provider>
+    </Elements>
   );
 };
 
