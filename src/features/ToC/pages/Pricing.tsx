@@ -279,11 +279,10 @@ export const Pricing: React.FC = () => {
                 setCurrentPlan(subscription?.current_plan);
                 setReservedPlan(subscription?.reserved_plan)
             }
+            console.log("sdfdsf")
         }
         run();
     }, []);
-
-    console.log(selectedDuration, selectedPlan, currentPlan, "currentPlan")
 
     useEffect(() => {
         const getPlanDetails = () => {
@@ -293,6 +292,7 @@ export const Pricing: React.FC = () => {
         const currentPlanDetails = getPlanDetails();
         if (currentPlanDetails)
             setPlanDetails(currentPlanDetails);
+
     }, [selectedPlan, selectedDuration])
 
     const handleStripePayment = async (event: React.FormEvent) => {

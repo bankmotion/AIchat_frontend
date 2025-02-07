@@ -53,7 +53,11 @@ export const ChatOptionMenu: React.FC<ChatOptionMenuProps> = ({ chat, onReload, 
   };
 
   // Do not display when user not logged in
-  if (!profile || !config) {
+  // if (!profile || !config) {
+  //   return null;
+  // }
+
+  if (!profile) {
     return null;
   }
 
@@ -66,7 +70,7 @@ export const ChatOptionMenu: React.FC<ChatOptionMenuProps> = ({ chat, onReload, 
       <span style={{ marginLeft: "auto" }}>
         {readyToChat ? (
           !isMessageLimit ? (
-            <Tag color="green">API is ready. Using {config.api}.</Tag>
+            <Tag color="green">API is ready. Using {config !== undefined ? config?.api:"openrouter"}.</Tag>
           ) : (
             <Tag
               style={{ cursor: "pointer" }}

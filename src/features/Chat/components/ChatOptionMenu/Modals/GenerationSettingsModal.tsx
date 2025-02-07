@@ -8,7 +8,7 @@ import {
   OPEN_AI_DEFAULT_GENERATION_SETTINGS,
   OPENROUTER_DEFAULT_GENERATION_SETTINGS,
 } from "../../../../../shared/services/generation-setting";
-import { UserConfig } from "../../../../../shared/services/user-config";
+import { updateUserConfig, UserConfig } from "../../../../../shared/services/user-config";
 
 const { Title } = Typography;
 
@@ -23,7 +23,7 @@ export const GenerationSettingsModal: React.FC<ChatSettingsModalProps> = ({
   open,
   onModalClose,
 }) => {
-  const { config, updateConfig } = useContext(AppContext);
+  const { config, updateConfig, profile } = useContext(AppContext);
   const [activePreset, setActivePreset] = useState<string>("openrouter"); // Default preset
   const { message } = App.useApp();
   const [form] = Form.useForm<FormValues>();
@@ -42,6 +42,9 @@ export const GenerationSettingsModal: React.FC<ChatSettingsModalProps> = ({
     };
 
     updateConfig(newConfig);
+    if (profile && profile?.id) {
+      updateUserConfig(newConfig, profile?.id);
+    }
     onModalClose();
   };
 
@@ -103,33 +106,31 @@ export const GenerationSettingsModal: React.FC<ChatSettingsModalProps> = ({
           </Form.Item>
 
           {/* Context Size - Visible for OpenAI and KoboldAI */}
-          {activePreset !== "openrouter" && (
-            <Form.Item
-              className="pb-2"
-              name="context_length"
-              label="Context Size"
-              help={
-                <>
-                  <span>
-                    How much will the AI remember. Context size also affects the speed of
-                    generation. Lower this if you get memory error!
-                  </span>
-                  <br />
-                  <span>
-                    GPT-3.5 supports maximum 4096 context. GPT-4 and Claude support up to 8k
-                    context.
-                  </span>
-                </>
-              }
-            >
-              <Slider
-                marks={{ 0: "0", 2048: "2048", 4096: "4096", 8192: "8192" }}
-                min={0}
-                max={8192}
-                step={1}
-              />
-            </Form.Item>
-          )}
+
+          <Form.Item
+            className="pb-2"
+            name="context_length"
+            label="Context Size"
+            help={
+              <>
+                <span>
+                  How much will the AI remember. Context size also affects the speed of generation.
+                  Lower this if you get memory error!
+                </span>
+                <br />
+                <span>
+                  GPT-3.5 supports maximum 4096 context. GPT-4 and Claude support up to 8k context.
+                </span>
+              </>
+            }
+          >
+            <Slider
+              marks={{ 0: "0", 2048: "2048", 4096: "4096", 8192: "8192" }}
+              min={0}
+              max={8192}
+              step={1}
+            />
+          </Form.Item>
 
           {/* Repetition Penalty - Visible for KoboldAI */}
           {activePreset === "koboldai" && (

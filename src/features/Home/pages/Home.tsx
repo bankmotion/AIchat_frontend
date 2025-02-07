@@ -87,7 +87,8 @@ export const Home: React.FC = () => {
 
   const params: SearchParams | undefined = useMemo(() => {
     const modeParams = { mode: localData.character_view || "sfw" };
-    const userParams = { user_id: profile?.id };
+    // const userParams = { user_id: profile?.id };
+    const userParams = { user_id: undefined };
 
     let is_nsfwParams = {};
 

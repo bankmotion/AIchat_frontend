@@ -163,7 +163,7 @@ export const PublicProfile: React.FC = () => {
 
           <Col lg={18} xs={24} className="text-left">
             <Title level={3} className="my-2">
-              Public characters
+              Characters
             </Title>
 
             <SortContainer>
